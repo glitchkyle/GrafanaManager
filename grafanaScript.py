@@ -1,21 +1,19 @@
 import requests
 import argparse
+from os.path import exists
 
 from urllib3.exceptions import InsecureRequestWarning
 
 # Constants
 
-# Manual Configuration of host and key
-# Arguments will override manual configuration
-manualHost = None
-manualKey = None
+CONFIG_FILE_NAME = 'config.txt'
 
 # Settings
 
 # Prevents invalid certificate warning
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning) 
 
-class GrafanaInterface(object):
+class GrafanaManager(object):
     def __init__(self, host=None, key=None):
         self.host = host 
         self.apiKey = key
@@ -129,7 +127,17 @@ def parseArguments():
 def main():
     args = parseArguments()
 
-    interface = GrafanaInterface(manualHost, manualKey)
+    # Manual Configuration of host and key
+    # Arguments will override manual configuration
+    MANUAL_HOST = None
+    MANUAL_KEY = None
+
+    # Assign default host and key if configuration file exists
+    if(exists(CONFIG_FILE_NAME)):
+        with open(CONFIG_FILE_NAME, 'r') as cf:
+            pass
+
+    interface = GrafanaManager(MANUAL_HOST, MANUAL_KEY)
 
     # Override manual configuration if specified in arguments
     if args.host is not None:
