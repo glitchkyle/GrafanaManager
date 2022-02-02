@@ -41,9 +41,9 @@ def main():
             for currentLine in cf:
                 line = currentLine.split(CONFIG_FILE_DELIMITER)
                 if(line[0] == 'host'):
-                    MANUAL_HOST = str(line[1])
+                    MANUAL_HOST = str(line[1]).strip()
                 elif(line[0] == 'apiKey'):
-                    MANUAL_KEY = str(line[1])
+                    MANUAL_KEY = str(line[1]).strip()
 
     interface = GrafanaManager(MANUAL_HOST, MANUAL_KEY)
 
