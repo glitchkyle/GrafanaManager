@@ -8,6 +8,7 @@ from urllib3.exceptions import InsecureRequestWarning
 # Constants
 
 CONFIG_FILE_NAME = 'config.txt'
+CONFIG_FILE_DELIMITER = '='
 
 # Settings
 
@@ -38,13 +39,11 @@ def main():
     if(exists(CONFIG_FILE_NAME)):
         with open(CONFIG_FILE_NAME, 'r') as cf:
             for currentLine in cf:
-                line = currentLine.split('=')
+                line = currentLine.split(CONFIG_FILE_DELIMITER)
                 if(line[0] == 'host'):
                     MANUAL_HOST = str(line[1])
-                    print("Default Host Assigned")
                 elif(line[0] == 'apiKey'):
                     MANUAL_KEY = str(line[1])
-                    print("Default Key Assigned")
 
     interface = GrafanaManager(MANUAL_HOST, MANUAL_KEY)
 
