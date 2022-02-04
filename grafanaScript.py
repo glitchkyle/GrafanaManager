@@ -8,7 +8,7 @@ from urllib3.exceptions import InsecureRequestWarning
 # Constants
 
 CONFIG_FILE_NAME = 'config.txt'
-CONFIG_FILE_DELIMITER = '='
+CONFIG_FILE_DELIMITER = '-'
 
 # Settings
 
