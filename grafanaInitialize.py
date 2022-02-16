@@ -1,30 +1,38 @@
 import os
-from grafanaInterface import GrafanaManager
+import argparse
+from grafanaInterface import GrafanaManager, GrafanaInitalizer
 
-# CONSTANTS
+# Constants
 
 DEFAULT_CONFIG_FILE_NAME = 'config.txt'
 DEFAULT_CONFIG_FILE_DELIMITER = '-'
 DEFAULT_DASHBOARD_DIRECTORY = 'Dashboards'
 
-def getHost():
-    pass
+# Local Methods
 
-def getKey():
-    pass
+def parseArguments():
+    ap = argparse.ArgumentParser()
 
-def createConfigFile(fileName=DEFAULT_CONFIG_FILE_DELIMITER, host=None, key=None):
+    ap.add_argument("--host", help="Grafana Host")
+    ap.add_argument("--user", help="Grafana Username Login")
+    ap.add_argument("--password", help="Grafana User Password")
+
+    return ap.parse_args()
+
+def createConfigFile(fileName=DEFAULT_CONFIG_FILE_NAME, delimiter=DEFAULT_CONFIG_FILE_DELIMITER, host=None, key=None):
     if host is None:
         print("ERROR: No host found")
-        return None
+        print("WARNING: No config file created")
+        return 
     
     if key is None:
         print("ERROR: No key found")
-        return None
+        print("WARNING: No config file created")
+        return
 
     with open(fileName, 'w') as cf:
-        cf.write('host' + DEFAULT_CONFIG_FILE_DELIMITER + host + '\n')
-        cf.write('key' + DEFAULT_CONFIG_FILE_DELIMITER + key)
+        cf.write('host' + delimiter + host + '\n')
+        cf.write('apiKey' + delimiter + key)
 
 
 def initializeGrafana(interface, dashboardDir):
@@ -34,13 +42,24 @@ def initializeGrafana(interface, dashboardDir):
             interface.createDashboard(dashboardDir + '/' + file)
 
 def main():
-    host = getHost()
-    key = getKey()
+    args = parseArguments()
 
-    file = createConfigFile(DEFAULT_CONFIG_FILE_NAME, host, key)
+    if args.host is None:
+        print("ERROR: No host specified")
+        return 
+    if args.user is None:
+        print("ERROR: Username not specified")
+        return
+    if args.password is None:
+        print("ERROR: Password not specified")
+        return
 
-    if file is None:
-        print("WARNING: No config file created")
+    initializer = GrafanaInitalizer(args.host, args.user, args.password)
+
+    host = initializer.getHost()
+    key = initializer.getkey()
+
+    createConfigFile(DEFAULT_CONFIG_FILE_NAME, DEFAULT_CONFIG_FILE_DELIMITER, host, key)
 
     interface = GrafanaManager(host, key)
 

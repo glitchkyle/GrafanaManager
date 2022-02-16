@@ -1,4 +1,52 @@
 import requests
+import json
+from urllib3.exceptions import InsecureRequestWarning
+
+# Settings
+
+# Prevents invalid certificate warning
+requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning) 
+
+class GrafanaInitalizer(object):
+    def __init__(self, host, username, password):
+        self.host = None
+        self.key = None
+
+        # Get Host
+        self.host = host
+
+        # Get Key
+        if self.host is not None:
+            session = requests.session()
+            
+            # Login to Grafana
+            session.post(
+                'https://' + self.host + '/grafana/login', 
+                headers={'Content-Type': 'application/json'},
+                json={"password": password,"user":username}, 
+                verify=False
+            )
+            # Get API keys
+            x = session.post(
+                'https://' + self.host + '/grafana/api/auth/keys', 
+                headers={'Content-Type': 'application/json'}, 
+                json={"name":"newAPI", "role":"Admin"}, 
+                verify=False
+            )
+
+            self.key = json.loads(x.text)['key']
+
+    def getHost(self):
+        return self.host
+
+    def setHost(self, host):
+        self.host = host
+
+    def getkey(self):
+        return self.key
+
+    def setkey(self, key):
+        self.key = key
 
 class GrafanaManager(object):
     def __init__(self, host=None, key=None):

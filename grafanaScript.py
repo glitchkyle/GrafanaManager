@@ -1,21 +1,30 @@
-import requests
 import argparse
 from os.path import exists
 
 from grafanaInterface import GrafanaManager
-from urllib3.exceptions import InsecureRequestWarning
 
 # Constants
 
 CONFIG_FILE_NAME = 'config.txt'
 CONFIG_FILE_DELIMITER = '-'
 
-# Settings
-
-# Prevents invalid certificate warning
-requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning) 
-
 # Local methods
+def parseConfigFile(configFile, delimiter):
+    host = None
+    key = None
+
+    # Assign default host and key if configuration file exists
+    if(exists(configFile)):
+        with open(configFile, 'r') as cf:
+            for currentLine in cf:
+                line = currentLine.split(delimiter)
+                if(line[0] == 'host'):
+                    host = str(line[1]).strip()
+                elif(line[0] == 'apiKey'):
+                    key = str(line[1]).strip()
+    
+    return host, key
+
 def parseArguments():
     ap = argparse.ArgumentParser()
 
@@ -31,19 +40,7 @@ def main():
     args = parseArguments()
 
     # Manual Configuration of host and key
-    # Arguments will override manual configuration
-    MANUAL_HOST = None
-    MANUAL_KEY = None
-
-    # Assign default host and key if configuration file exists
-    if(exists(CONFIG_FILE_NAME)):
-        with open(CONFIG_FILE_NAME, 'r') as cf:
-            for currentLine in cf:
-                line = currentLine.split(CONFIG_FILE_DELIMITER)
-                if(line[0] == 'host'):
-                    MANUAL_HOST = str(line[1]).strip()
-                elif(line[0] == 'apiKey'):
-                    MANUAL_KEY = str(line[1]).strip()
+    MANUAL_HOST, MANUAL_KEY = parseConfigFile(CONFIG_FILE_NAME, CONFIG_FILE_DELIMITER)
 
     interface = GrafanaManager(MANUAL_HOST, MANUAL_KEY)
 
