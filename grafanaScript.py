@@ -5,11 +5,20 @@ from grafanaInterface import GrafanaManager
 
 # Constants
 
-CONFIG_FILE_NAME = 'config.txt'
-CONFIG_FILE_DELIMITER = '-'
+DEFAULT_CONFIG_FILE_NAME = 'config.txt'
+DEFAULT_CONFIG_FILE_DELIMITER = '-'
 
 # Local methods
-def parseConfigFile(configFile, delimiter):
+def parseConfigFile(configFile=DEFAULT_CONFIG_FILE_NAME, delimiter=DEFAULT_CONFIG_FILE_DELIMITER):
+    """
+    Reads config file containing host and generated API Token
+
+    Args:
+        fileName (str): File name for config file (default DEFAULT_CONFIG_FILE_NAME)
+        delimiter (str): Delimiter for config file (default DEFAULT_CONFIG_FILE_DELIMITER)
+    Returns:
+        host, key (str, str): Values stored in config file
+    """
     host = None
     key = None
 
@@ -26,6 +35,7 @@ def parseConfigFile(configFile, delimiter):
     return host, key
 
 def parseArguments():
+    """ Parses command arguments """  
     ap = argparse.ArgumentParser()
 
     ap.add_argument("--host", help="Set Grafana Host")
@@ -40,7 +50,7 @@ def main():
     args = parseArguments()
 
     # Manual Configuration of host and key
-    MANUAL_HOST, MANUAL_KEY = parseConfigFile(CONFIG_FILE_NAME, CONFIG_FILE_DELIMITER)
+    MANUAL_HOST, MANUAL_KEY = parseConfigFile(DEFAULT_CONFIG_FILE_NAME, DEFAULT_CONFIG_FILE_DELIMITER)
 
     interface = GrafanaManager(MANUAL_HOST, MANUAL_KEY)
 

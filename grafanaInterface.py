@@ -8,7 +8,25 @@ from urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning) 
 
 class GrafanaInitalizer(object):
+    """
+    Grafana Initializer stores the given host and attempts to create a 
+    a new Grafana API token
+
+    Attributes:
+        host (str): Grafana Host
+        key (str): Grafana API token to be generated
+    """
     def __init__(self, host, username, password):
+        """
+        Grafana Initializer Constructor
+
+        Args: 
+            host (str): Grafana Host 
+            username (str): Grafana Admin Username
+            password (str): Grafana Admin Password 
+        Returns:
+            None
+        """
         self.host = None
         self.key = None
 
@@ -26,7 +44,7 @@ class GrafanaInitalizer(object):
                 json={"password": password,"user":username}, 
                 verify=False
             )
-            # Get API keys
+            # Get API key
             x = session.post(
                 'https://' + self.host + '/grafana/api/auth/keys', 
                 headers={'Content-Type': 'application/json'}, 
@@ -49,7 +67,23 @@ class GrafanaInitalizer(object):
         self.key = key
 
 class GrafanaManager(object):
+    """
+    Grafana Manager interacts with Grafana using Grafana's REST APIs 
+
+    Attributes:
+        host (str): Grafana Host
+        apikey (str): Generated Grafana admin API key 
+    """
     def __init__(self, host=None, key=None):
+        """
+        Grafana Initializer Constructor
+
+        Args: 
+            host (str): Grafana Host (default None)
+            key (str): Grafana admin API key (default None)
+        Returns:
+            None
+        """
         self.host = host 
         self.apiKey = key
     
@@ -68,6 +102,14 @@ class GrafanaManager(object):
     # POST Methods
 
     def createDashboard(self, fileDir):
+        """
+        Uploads given dashboard to Grafana host 
+
+        Args: 
+            fileDir (str): Dashboard JSON file directory
+        Returns:
+            None
+        """
         if self.host is None:
             print("ERROR: No host specified")
             return 
@@ -92,6 +134,14 @@ class GrafanaManager(object):
     # DELETE Methods
 
     def deleteDashboard(self, dashboardUID):
+        """
+        Deletes given dashboard unique ID in Grafana host 
+
+        Args: 
+            dashboardUID (str): Dashboard Unique ID 
+        Returns:
+            None
+        """
         if self.host is None:
             print("ERROR: No host specified")
             return 
@@ -112,6 +162,14 @@ class GrafanaManager(object):
     # GET Methods
 
     def findDashboard(self, dashboardUID):
+        """
+        Locates given dashboard unique ID in Grafana host 
+
+        Args: 
+            dashboardUID (str): Dashboard Unique ID 
+        Returns:
+            None
+        """
         if self.host is None:
             print("ERROR: No host specified")
             return 
@@ -130,6 +188,14 @@ class GrafanaManager(object):
         print(x)
     
     def getHomeDashboard(self):
+        """
+        Locates home dashboard in Grafana host
+
+        Args: 
+            None
+        Returns:
+            None
+        """
         if self.host is None:
             print("ERROR: No host specified")
             return 
