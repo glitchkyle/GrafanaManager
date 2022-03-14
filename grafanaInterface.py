@@ -54,8 +54,8 @@ class GrafanaInitalizer(object):
                 )
 
                 self.key = json.loads(x.text)['key']
-            except:
-                print("ERROR: Error occurred when creating API Token")
+            except KeyError:
+                print("ERROR: API token already exists")
                 self.key = None
 
     def getHost(self):
