@@ -1,6 +1,7 @@
 import os
 import argparse
-from grafanaInterface import GrafanaManager, GrafanaInitalizer
+from os.path import exists
+from grafanaInterface import GrafanaManager, GrafanaInitalizer, createConfigFile, parseConfigFile
 
 # Constants
 
@@ -19,33 +20,6 @@ def parseArguments():
     ap.add_argument("--password", help="Grafana User Password")
 
     return ap.parse_args()
-
-def createConfigFile(fileName=DEFAULT_CONFIG_FILE_NAME, delimiter=DEFAULT_CONFIG_FILE_DELIMITER, host=None, key=None):
-    """
-    Creates config file containing host and generated API Token
-
-    Args:
-        fileName (str): File name for config file (default DEFAULT_CONFIG_FILE_NAME)
-        delimiter (str): Delimiter for config file (default DEFAULT_CONFIG_FILE_DELIMITER)
-        host (str): Grafana Host 
-        key (str): Grafana newly generated API Token 
-    Returns: 
-        None 
-    """
-    if host is None:
-        print("ERROR: No host found")
-        print("WARNING: No config file created")
-        return 
-    
-    if key is None:
-        print("ERROR: No key found")
-        print("WARNING: No config file created")
-        return
-
-    with open(fileName, 'w') as cf:
-        cf.write('host' + delimiter + host + '\n')
-        cf.write('apiKey' + delimiter + key)
-
 
 def uploadDashboards(interface, dashboardDir):
     """
@@ -78,13 +52,16 @@ def main():
         print("ERROR: Password not specified")
         return
 
-    initializer = GrafanaInitalizer(args.host, args.user, args.password)
+    if exists(DEFAULT_CONFIG_FILE_NAME):
+        host, key = parseConfigFile(DEFAULT_CONFIG_FILE_NAME, DEFAULT_CONFIG_FILE_DELIMITER)
+    else:
+        initializer = GrafanaInitalizer(args.host, args.user, args.password)
 
-    host = initializer.getHost()
-    key = initializer.getkey()
+        host = initializer.getHost()
+        key = initializer.getkey()
 
-    # Creates config file containing host and generated API Token
-    createConfigFile(DEFAULT_CONFIG_FILE_NAME, DEFAULT_CONFIG_FILE_DELIMITER, host, key)
+        # Creates config file containing host and generated API Token
+        createConfigFile(DEFAULT_CONFIG_FILE_NAME, DEFAULT_CONFIG_FILE_DELIMITER, host, key)
 
     interface = GrafanaManager(host, key)
 

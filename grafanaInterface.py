@@ -7,6 +7,56 @@ from urllib3.exceptions import InsecureRequestWarning
 # Prevents invalid certificate warning
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning) 
 
+def createConfigFile(fileName, delimiter, host, key):
+    """
+    Creates config file containing host and generated API Token
+
+    Args:
+        fileName (str): File name for config file (default DEFAULT_CONFIG_FILE_NAME)
+        delimiter (str): Delimiter for config file (default DEFAULT_CONFIG_FILE_DELIMITER)
+        host (str): Grafana Host 
+        key (str): Grafana newly generated API Token 
+    Returns: 
+        None 
+    """
+    if host is None:
+        print("ERROR: No host found")
+        print("WARNING: No config file created")
+        return 
+    
+    if key is None:
+        print("ERROR: No key found")
+        print("WARNING: No config file created")
+        return
+
+    with open(fileName, 'w') as cf:
+        cf.write('host' + delimiter + host + '\n')
+        cf.write('apiKey' + delimiter + key)
+
+def parseConfigFile(configFile, delimiter):
+    """
+    Reads config file containing host and generated API Token
+
+    Args:
+        fileName (str): File name for config file (default DEFAULT_CONFIG_FILE_NAME)
+        delimiter (str): Delimiter for config file (default DEFAULT_CONFIG_FILE_DELIMITER)
+    Returns:
+        host, key (str, str): Values stored in config file
+    """
+    host = None
+    key = None
+
+    # Assign default host and key if configuration file exists
+    with open(configFile, 'r') as cf:
+        for currentLine in cf:
+            line = currentLine.split(delimiter)
+            if(line[0] == 'host'):
+                host = str(line[1]).strip()
+            elif(line[0] == 'apiKey'):
+                key = str(line[1]).strip()
+    
+    return host, key
+
 class GrafanaInitalizer(object):
     """
     Grafana Initializer stores the given host and attempts to create a 

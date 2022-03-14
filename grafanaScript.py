@@ -1,7 +1,7 @@
 import argparse
 from os.path import exists
 
-from grafanaInterface import GrafanaManager
+from grafanaInterface import GrafanaManager, parseConfigFile
 
 # Constants
 
@@ -9,30 +9,6 @@ DEFAULT_CONFIG_FILE_NAME = 'config.txt'
 DEFAULT_CONFIG_FILE_DELIMITER = '-'
 
 # Local methods
-def parseConfigFile(configFile=DEFAULT_CONFIG_FILE_NAME, delimiter=DEFAULT_CONFIG_FILE_DELIMITER):
-    """
-    Reads config file containing host and generated API Token
-
-    Args:
-        fileName (str): File name for config file (default DEFAULT_CONFIG_FILE_NAME)
-        delimiter (str): Delimiter for config file (default DEFAULT_CONFIG_FILE_DELIMITER)
-    Returns:
-        host, key (str, str): Values stored in config file
-    """
-    host = None
-    key = None
-
-    # Assign default host and key if configuration file exists
-    if(exists(configFile)):
-        with open(configFile, 'r') as cf:
-            for currentLine in cf:
-                line = currentLine.split(delimiter)
-                if(line[0] == 'host'):
-                    host = str(line[1]).strip()
-                elif(line[0] == 'apiKey'):
-                    key = str(line[1]).strip()
-    
-    return host, key
 
 def parseArguments():
     """ Parses command arguments """  
