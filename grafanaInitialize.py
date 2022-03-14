@@ -59,7 +59,11 @@ def uploadDashboards(interface, dashboardDir):
     """
     for root, dirs, files in os.walk(DEFAULT_DASHBOARD_DIRECTORY):
         for file in files:
-            interface.createDashboard(dashboardDir + '/' + file)
+            response = interface.createDashboard(dashboardDir + '/' + file)
+            if response.status_code == 200:
+                print(f"{file} was successfully uploaded")
+            else:
+                print(f"{file} was unsuccessfully uploaded")
 
 def main():
     args = parseArguments()

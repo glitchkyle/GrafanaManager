@@ -133,7 +133,7 @@ class GrafanaManager(object):
         dashboardObject = open(fileDir).read()
 
         x = requests.post(url, headers=headers, data=dashboardObject, verify=False)
-        print(x)
+        return x
     
     # DELETE Methods
 
@@ -161,7 +161,7 @@ class GrafanaManager(object):
         }
 
         x = requests.delete(url, headers=headers, verify=False)
-        print(x)
+        return x
 
     # GET Methods
 
@@ -189,7 +189,7 @@ class GrafanaManager(object):
         }
 
         x = requests.get(url, headers=headers, verify=False)
-        print(x)
+        return x
     
     def getHomeDashboard(self):
         """
@@ -215,4 +215,4 @@ class GrafanaManager(object):
         }
 
         x = requests.get(url, headers=headers, verify=False)
-        print(x)
+        return x
