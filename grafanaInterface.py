@@ -37,22 +37,26 @@ class GrafanaInitalizer(object):
         if self.host is not None:
             session = requests.session()
             
-            # Login to Grafana
-            session.post(
-                'https://' + self.host + '/grafana/login', 
-                headers={'Content-Type': 'application/json'},
-                json={"password": password,"user":username}, 
-                verify=False
-            )
-            # Get API key
-            x = session.post(
-                'https://' + self.host + '/grafana/api/auth/keys', 
-                headers={'Content-Type': 'application/json'}, 
-                json={"name":"newAPI", "role":"Admin"}, 
-                verify=False
-            )
+            try:
+                # Login to Grafana
+                session.post(
+                    'https://' + self.host + '/grafana/login', 
+                    headers={'Content-Type': 'application/json'},
+                    json={"password": password,"user":username}, 
+                    verify=False
+                )
+                # Get API key
+                x = session.post(
+                    'https://' + self.host + '/grafana/api/auth/keys', 
+                    headers={'Content-Type': 'application/json'}, 
+                    json={"name":"newAPI", "role":"Admin"}, 
+                    verify=False
+                )
 
-            self.key = json.loads(x.text)['key']
+                self.key = json.loads(x.text)['key']
+            except:
+                print("ERROR: Error occurred when creating API Token")
+                self.key = None
 
     def getHost(self):
         return self.host
