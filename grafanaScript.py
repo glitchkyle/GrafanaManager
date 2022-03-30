@@ -40,13 +40,17 @@ def main():
     if args.mode is not None:
         args.mode = args.mode.lower()
         if(args.mode == 'create' or args.mode == 'update'):
-            interface.createDashboard(args.file)
+            res = interface.createDashboard(args.file)
+            print(res)
         elif(args.mode == 'find'):
-            interface.findDashboard(args.uniqueID)
+            res = interface.findDashboard(args.uniqueID)
+            print(res)
         elif(args.mode == 'delete'):
-            interface.deleteDashboard(args.uniqueID)
+            res = interface.deleteDashboard(args.uniqueID)
+            print(res)
         elif(args.mode == 'home'):
-            interface.getHomeDashboard()
+            res = interface.getHomeDashboard()
+            print(res)
         else:
             print("No matching call for " + args.mode)
 

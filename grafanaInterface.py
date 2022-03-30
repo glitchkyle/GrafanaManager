@@ -162,7 +162,7 @@ class GrafanaManager(object):
         Args: 
             fileDir (str): Dashboard JSON file directory
         Returns:
-            None
+            x (response): Response of API Call
         """
         if self.host is None:
             print("ERROR: No host specified")
@@ -194,7 +194,7 @@ class GrafanaManager(object):
         Args: 
             dashboardUID (str): Dashboard Unique ID 
         Returns:
-            None
+            x (response): Response of API Call
         """
         if self.host is None:
             print("ERROR: No host specified")
@@ -222,7 +222,7 @@ class GrafanaManager(object):
         Args: 
             dashboardUID (str): Dashboard Unique ID 
         Returns:
-            None
+            x (response): Response of API Call
         """
         if self.host is None:
             print("ERROR: No host specified")
@@ -248,7 +248,7 @@ class GrafanaManager(object):
         Args: 
             None
         Returns:
-            None
+            x (response): Response of API Call
         """
         if self.host is None:
             print("ERROR: No host specified")
