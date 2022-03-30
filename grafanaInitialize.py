@@ -19,6 +19,7 @@ def parseArguments():
     ap.add_argument("--user", help="Grafana Username Login")
     ap.add_argument("--password", help="Grafana User Password")
     ap.add_argument("--directory", help="Directory for dashboards to be uploaded")
+    ap.add_argument("--cf", help="Configuration file for API key. If config file does not exist, create with passed in name")
 
     return ap.parse_args()
 
@@ -35,16 +36,24 @@ def main():
         print("ERROR: Password not specified")
         return
 
-    if exists(DEFAULT_CONFIG_FILE_NAME):
-        host, key = parseConfigFile(DEFAULT_CONFIG_FILE_NAME, DEFAULT_CONFIG_FILE_DELIMITER)
+    configFile = DEFAULT_CONFIG_FILE_NAME
+    if args.cf is not None:
+        configFile = args.cf
+
+    if exists(configFile):
+        host, key = parseConfigFile(configFile, DEFAULT_CONFIG_FILE_DELIMITER)
     else:
         initializer = GrafanaInitalizer(args.host, args.user, args.password)
 
         host = initializer.getHost()
         key = initializer.getkey()
 
+        if key is None:
+            print("ERROR: Key creation failed. No configuration file created")
+            return
+
         # Creates config file containing host and generated API Token
-        createConfigFile(DEFAULT_CONFIG_FILE_NAME, DEFAULT_CONFIG_FILE_DELIMITER, host, key)
+        createConfigFile(configFile, DEFAULT_CONFIG_FILE_DELIMITER, host, key)
 
     interface = GrafanaManager(host, key)
 

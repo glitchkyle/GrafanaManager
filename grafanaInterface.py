@@ -71,10 +71,13 @@ def uploadDashboards(interface, dashboardDir):
     for root, dirs, files in os.walk(dashboardDir):
         for file in files:
             response = interface.createDashboard(dashboardDir + '/' + file)
-            if response.status_code == 200:
-                print(f"{file} was successfully uploaded")
+            if response is not None:
+                if response.status_code == 200:
+                    print(f"{file} was successfully uploaded")
+                else:
+                    print(f"{file} was unsuccessfully uploaded")
             else:
-                print(f"{file} was unsuccessfully uploaded")
+                print("Warning: Error in creating dashboard")
 
 class GrafanaInitalizer(object):
     """
