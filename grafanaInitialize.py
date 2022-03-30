@@ -1,7 +1,7 @@
-import os
 import argparse
 from os.path import exists
-from grafanaInterface import GrafanaManager, GrafanaInitalizer, createConfigFile, parseConfigFile
+
+from grafanaInterface import GrafanaManager, GrafanaInitalizer, createConfigFile, parseConfigFile, uploadDashboards
 
 # Constants
 
@@ -18,26 +18,9 @@ def parseArguments():
     ap.add_argument("--host", help="Grafana Host")
     ap.add_argument("--user", help="Grafana Username Login")
     ap.add_argument("--password", help="Grafana User Password")
+    ap.add_argument("--directory", help="Directory for dashboards to be uploaded")
 
     return ap.parse_args()
-
-def uploadDashboards(interface, dashboardDir):
-    """
-    Uploads each dashboard in given directory through given interface
-
-    Args:
-        interface (str): Grafana Interface Object 
-        dashboardDir (str): Directory containing dashboards to be uploaded
-    Returns:
-        None
-    """
-    for root, dirs, files in os.walk(DEFAULT_DASHBOARD_DIRECTORY):
-        for file in files:
-            response = interface.createDashboard(dashboardDir + '/' + file)
-            if response.status_code == 200:
-                print(f"{file} was successfully uploaded")
-            else:
-                print(f"{file} was unsuccessfully uploaded")
 
 def main():
     args = parseArguments()
@@ -65,8 +48,12 @@ def main():
 
     interface = GrafanaManager(host, key)
 
+    dashboardDir = DEFAULT_DASHBOARD_DIRECTORY
+    if args.directory is not None:
+        dashboardDir = args.directory
+
     # Uploads each dashboard within dashboard directory to host Grafana
-    uploadDashboards(interface, DEFAULT_DASHBOARD_DIRECTORY)
+    uploadDashboards(interface, dashboardDir)
 
 if __name__ == "__main__":
     main()

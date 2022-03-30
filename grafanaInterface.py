@@ -1,5 +1,6 @@
 import requests
 import json
+import os
 from urllib3.exceptions import InsecureRequestWarning
 
 # Settings
@@ -56,6 +57,24 @@ def parseConfigFile(configFile, delimiter):
                 key = str(line[1]).strip()
     
     return host, key
+
+def uploadDashboards(interface, dashboardDir):
+    """
+    Uploads each dashboard in given directory through given interface
+
+    Args:
+        interface (str): Grafana Interface Object 
+        dashboardDir (str): Directory containing dashboards to be uploaded
+    Returns:
+        None
+    """
+    for root, dirs, files in os.walk(dashboardDir):
+        for file in files:
+            response = interface.createDashboard(dashboardDir + '/' + file)
+            if response.status_code == 200:
+                print(f"{file} was successfully uploaded")
+            else:
+                print(f"{file} was unsuccessfully uploaded")
 
 class GrafanaInitalizer(object):
     """
