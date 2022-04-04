@@ -55,30 +55,9 @@ def parseConfigFile(configFile, delimiter):
                 elif(line[0] == 'apiKey'):
                     key = str(line[1]).strip()
     else:
-        raise Exception("ERROR: Configuration file not found")
+        raise Exception("Configuration file not found")
     
     return host, key
-
-def uploadDashboards(interface, dashboardDir):
-    """
-    Uploads each dashboard in given directory through given :class: GrafanaManager 
-    object containing valid host and Grafana API key
-
-    :param interface: The :class: GrafanaManager object
-    :type interface: GrafanaManager
-    :param dashboardDir: Path containing directory of dashboards to be uplaoded
-    :type dashboardDir: str
-    """
-    for root, dirs, files in os.walk(dashboardDir):
-        for file in files:
-            response = interface.createDashboard(dashboardDir + '/' + file)
-            if response is not None:
-                if response.status_code == 200:
-                    print(f"{file} was successfully uploaded")
-                else:
-                    print(f"{file} was unsuccessfully uploaded")
-            else:
-                print(f"Warning: Error in uploading dashboard {file}")
 
 class GrafanaManager(object):
     """
@@ -135,7 +114,7 @@ class GrafanaManager(object):
                 x = session.post(
                     'https://' + self.host + '/grafana/api/auth/keys', 
                     headers={'Content-Type': 'application/json'}, 
-                    json={"name":"newAPI", "role":"Admin"}, 
+                    json={"name":"newAPItestingfinal", "role":"Admin"}, 
                     verify=False
                 )
 
@@ -143,10 +122,10 @@ class GrafanaManager(object):
             except KeyError:
                 # Raise exception for key error when there is an existing API token
                 self.apiKey = None
-                raise Exception("ERROR: API token already exists")
+                raise Exception("API token already exists")
         else:
             # Raise exception for key error when there is no host for API token creation
-            raise Exception("ERROR: No host specified")
+            raise Exception("No host specified")
  
     # POST Methods
 
@@ -162,10 +141,10 @@ class GrafanaManager(object):
         :rtype: response
         """
         if self.host is None:
-            raise Exception("ERROR: No host specified")
+            raise Exception("No host specified")
 
         if self.apiKey is None:
-            raise Exception("ERROR: No admin API key specified")
+            raise Exception("No admin API key specified")
 
         url = 'https://' + self.host + '/grafana/api/dashboards/db'
 
@@ -194,10 +173,10 @@ class GrafanaManager(object):
         :rtype: response
         """
         if self.host is None:
-            raise Exception("ERROR: No host specified")
+            raise Exception("No host specified")
 
         if self.apiKey is None:
-            raise Exception("ERROR: No admin API key specified")
+            raise Exception("No admin API key specified")
 
         url = 'https://' + self.host + '/grafana/api/dashboards/uid/' + dashboardUID
 
@@ -222,10 +201,10 @@ class GrafanaManager(object):
         :rtype: response
         """
         if self.host is None:
-            raise Exception("ERROR: No host specified")
+            raise Exception("No host specified")
 
         if self.apiKey is None:
-            raise Exception("ERROR: No admin API key specified")
+            raise Exception("No admin API key specified")
 
         url = 'https://' + self.host + '/grafana/api/dashboards/uid/' + dashboardUID
 
@@ -248,10 +227,10 @@ class GrafanaManager(object):
         :rtype: response
         """
         if self.host is None:
-            raise Exception("ERROR: No host specified")
+            raise Exception("No host specified")
 
         if self.apiKey is None:
-            raise Exception("ERROR: No admin API key specified")
+            raise Exception("No admin API key specified")
 
         url = 'https://' + self.host + '/grafana/api/dashboards/home'
 
@@ -261,3 +240,24 @@ class GrafanaManager(object):
 
         x = requests.get(url, headers=headers, verify=False)
         return x
+    
+    def uploadDashboards(self, dashboardDir):
+        """
+        Uploads each dashboard in given directory containing 
+        valid host and Grafana API key
+
+        :param dashboardDir: Path containing directory of dashboards to be uplaoded
+        :type dashboardDir: str
+        """
+        for root, dirs, files in os.walk(dashboardDir):
+            for file in files:
+                response = self.createDashboard(dashboardDir + '/' + file)
+
+                # Print Status
+                if response is not None:
+                    if response.status_code == 200:
+                        print(f"{file} was successfully uploaded")
+                    else:
+                        print(f"{file} was unsuccessfully uploaded")
+                else:
+                    print(f"Warning: Error in uploading dashboard {file}")
