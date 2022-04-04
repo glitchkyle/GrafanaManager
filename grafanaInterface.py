@@ -1,6 +1,7 @@
 import requests
 import json
 import os
+from os.path import exists
 from urllib3.exceptions import InsecureRequestWarning
 
 # Settings
@@ -10,25 +11,17 @@ requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
 def createConfigFile(fileName, delimiter, host, key):
     """
-    Creates config file containing host and generated API Token
+    Creates configuration file containing host and generated API Token
 
-    Args:
-        fileName (str): File name for config file (default DEFAULT_CONFIG_FILE_NAME)
-        delimiter (str): Delimiter for config file (default DEFAULT_CONFIG_FILE_DELIMITER)
-        host (str): Grafana Host 
-        key (str): Grafana newly generated API Token 
-    Returns: 
-        None 
+    :param fileName: The name of the configuration file
+    :type fileName: str
+    :param delimiter: The delimiter of the configuration file
+    :type delimiter: str
+    :param host: Grafana Host
+    :type host: str
+    :param key: Grafana generated API Token
+    :type key: str
     """
-    if host is None:
-        print("ERROR: No host found")
-        print("WARNING: No config file created")
-        return 
-    
-    if key is None:
-        print("ERROR: No key found")
-        print("WARNING: No config file created")
-        return
 
     with open(fileName, 'w') as cf:
         cf.write('host' + delimiter + host + '\n')
@@ -38,35 +31,43 @@ def parseConfigFile(configFile, delimiter):
     """
     Reads config file containing host and generated API Token
 
-    Args:
-        fileName (str): File name for config file (default DEFAULT_CONFIG_FILE_NAME)
-        delimiter (str): Delimiter for config file (default DEFAULT_CONFIG_FILE_DELIMITER)
-    Returns:
-        host, key (str, str): Values stored in config file
+    :param configFile: The configuration file path
+    :type configFile: str
+    :param delimiter: The delimiter of the configuration file
+    :type delimiter: str
+    :raises: Exception: if config file not found
+    :return: host containing Grafana Host
+    :rtype: str 
+    :return: generated API Token
+    :rtype: str
     """
     host = None
     key = None
 
-    # Assign default host and key if configuration file exists
-    with open(configFile, 'r') as cf:
-        for currentLine in cf:
-            line = currentLine.split(delimiter)
-            if(line[0] == 'host'):
-                host = str(line[1]).strip()
-            elif(line[0] == 'apiKey'):
-                key = str(line[1]).strip()
+    # Check if the configuration file exists
+    if(exists(configFile)):
+        # Assign default host and key 
+        with open(configFile, 'r') as cf:
+            for currentLine in cf:
+                line = currentLine.split(delimiter)
+                if(line[0] == 'host'):
+                    host = str(line[1]).strip()
+                elif(line[0] == 'apiKey'):
+                    key = str(line[1]).strip()
+    else:
+        raise Exception("ERROR: Configuration file not found")
     
     return host, key
 
 def uploadDashboards(interface, dashboardDir):
     """
-    Uploads each dashboard in given directory through given interface
+    Uploads each dashboard in given directory through given :class: GrafanaManager 
+    object containing valid host and Grafana API key
 
-    Args:
-        interface (str): Grafana Interface Object 
-        dashboardDir (str): Directory containing dashboards to be uploaded
-    Returns:
-        None
+    :param interface: The :class: GrafanaManager object
+    :type interface: GrafanaManager
+    :param dashboardDir: Path containing directory of dashboards to be uplaoded
+    :type dashboardDir: str
     """
     for root, dirs, files in os.walk(dashboardDir):
         for file in files:
@@ -77,38 +78,51 @@ def uploadDashboards(interface, dashboardDir):
                 else:
                     print(f"{file} was unsuccessfully uploaded")
             else:
-                print("Warning: Error in creating dashboard")
+                print(f"Warning: Error in uploading dashboard {file}")
 
-class GrafanaInitalizer(object):
+class GrafanaManager(object):
     """
-    Grafana Initializer stores the given host and attempts to create a 
-    a new Grafana API token
+    Grafana Manager interacts with Grafana Host using Grafana's REST APIs 
 
-    Attributes:
-        host (str): Grafana Host
-        key (str): Grafana API token to be generated
+    :param host: Grafana Host 
+    :type host: str
+    :param key: Grafana API token
+    :type key: str
     """
-    def __init__(self, host, username, password):
+    def __init__(self, host=None, key=None):
         """
-        Grafana Initializer Constructor
-
-        Args: 
-            host (str): Grafana Host 
-            username (str): Grafana Admin Username
-            password (str): Grafana Admin Password 
-        Returns:
-            None
+        Constructor Method
         """
-        self.host = None
-        self.key = None
-
-        # Get Host
+        self.host = host 
+        self.apiKey = key
+    
+    def getHost(self):
+        return self.host
+    
+    def setHost(self, host):
         self.host = host
+    
+    def getAPIKey(self):
+        return self.apiKey
 
-        # Get Key
+    def setAPIKey(self, key):
+        self.apiKey = key
+
+    def createToken(self, username, password):
+        """
+        Generate new API token 
+
+        :param host: Grafana Host 
+        :type host: str
+        :param key: Grafana API token
+        :type key: str
+        :raises: Exception: if API token already created
+        :raises: Exception: if no host given to object
+        """
+
+        session = requests.session()
+
         if self.host is not None:
-            session = requests.session()
-            
             try:
                 # Login to Grafana
                 session.post(
@@ -127,53 +141,12 @@ class GrafanaInitalizer(object):
 
                 self.key = json.loads(x.text)['key']
             except KeyError:
-                print("ERROR: API token already exists")
+                # Raise exception for key error when there is an existing API token
                 self.key = None
-
-    def getHost(self):
-        return self.host
-
-    def setHost(self, host):
-        self.host = host
-
-    def getkey(self):
-        return self.key
-
-    def setkey(self, key):
-        self.key = key
-
-class GrafanaManager(object):
-    """
-    Grafana Manager interacts with Grafana using Grafana's REST APIs 
-
-    Attributes:
-        host (str): Grafana Host
-        apikey (str): Generated Grafana admin API key 
-    """
-    def __init__(self, host=None, key=None):
-        """
-        Grafana Initializer Constructor
-
-        Args: 
-            host (str): Grafana Host (default None)
-            key (str): Grafana admin API key (default None)
-        Returns:
-            None
-        """
-        self.host = host 
-        self.apiKey = key
-    
-    def getHost(self):
-        return self.host
-    
-    def setHost(self, host):
-        self.host = host
-    
-    def getAPIKey(self):
-        return self.apiKey
-
-    def setAPIKey(self, key):
-        self.apiKey = key
+                raise Exception("ERROR: API token already exists")
+        else:
+            # Raise exception for key error when there is no host for API token creation
+            raise Exception("ERROR: No host specified")
  
     # POST Methods
 
@@ -181,18 +154,18 @@ class GrafanaManager(object):
         """
         Uploads given dashboard to Grafana host 
 
-        Args: 
-            fileDir (str): Dashboard JSON file directory
-        Returns:
-            x (response): Response of API Call
+        :param fileDir: Path to JSON containing Grafana dashboard
+        :type fileDir: str
+        :raises: Exception: if object has no existing host file
+        :raises: Exception: if object has no existing API key
+        :return: response of API call
+        :rtype: response
         """
         if self.host is None:
-            print("ERROR: No host specified")
-            return 
+            raise Exception("ERROR: No host specified")
 
         if self.apiKey is None:
-            print("ERROR: No admin API key specified")
-            return
+            raise Exception("ERROR: No admin API key specified")
 
         url = 'https://' + self.host + '/grafana/api/dashboards/db'
 
@@ -213,18 +186,18 @@ class GrafanaManager(object):
         """
         Deletes given dashboard unique ID in Grafana host 
 
-        Args: 
-            dashboardUID (str): Dashboard Unique ID 
-        Returns:
-            x (response): Response of API Call
+        :param dashboardUID: Grafana Dashboard Unique ID, usually written within JSON
+        :type dashboardUID: str
+        :raises: Exception: if object has no existing host file
+        :raises: Exception: if object has no existing API key
+        :return: response of API call
+        :rtype: response
         """
         if self.host is None:
-            print("ERROR: No host specified")
-            return 
+            raise Exception("ERROR: No host specified")
 
         if self.apiKey is None:
-            print("ERROR: No admin API key specified")
-            return
+            raise Exception("ERROR: No admin API key specified")
 
         url = 'https://' + self.host + '/grafana/api/dashboards/uid/' + dashboardUID
 
@@ -241,18 +214,18 @@ class GrafanaManager(object):
         """
         Locates given dashboard unique ID in Grafana host 
 
-        Args: 
-            dashboardUID (str): Dashboard Unique ID 
-        Returns:
-            x (response): Response of API Call
+        :param dashboardUID: Grafana Dashboard Unique ID, usually written within JSON
+        :type dashboardUID: str
+        :raises: Exception: if object has no existing host file
+        :raises: Exception: if object has no existing API key
+        :return: response of API call
+        :rtype: response
         """
         if self.host is None:
-            print("ERROR: No host specified")
-            return 
+            raise Exception("ERROR: No host specified")
 
         if self.apiKey is None:
-            print("ERROR: No admin API key specified")
-            return
+            raise Exception("ERROR: No admin API key specified")
 
         url = 'https://' + self.host + '/grafana/api/dashboards/uid/' + dashboardUID
 
@@ -267,18 +240,18 @@ class GrafanaManager(object):
         """
         Locates home dashboard in Grafana host
 
-        Args: 
-            None
-        Returns:
-            x (response): Response of API Call
+        :param dashboardUID: Grafana Dashboard Unique ID, usually written within JSON
+        :type dashboardUID: str
+        :raises: Exception: if object has no existing host file
+        :raises: Exception: if object has no existing API key
+        :return: response of API call
+        :rtype: response
         """
         if self.host is None:
-            print("ERROR: No host specified")
-            return 
+            raise Exception("ERROR: No host specified")
 
         if self.apiKey is None:
-            print("ERROR: No admin API key specified")
-            return
+            raise Exception("ERROR: No admin API key specified")
 
         url = 'https://' + self.host + '/grafana/api/dashboards/home'
 
