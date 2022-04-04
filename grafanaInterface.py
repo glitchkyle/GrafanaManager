@@ -139,10 +139,10 @@ class GrafanaManager(object):
                     verify=False
                 )
 
-                self.key = json.loads(x.text)['key']
+                self.apiKey = json.loads(x.text)['key']
             except KeyError:
                 # Raise exception for key error when there is an existing API token
-                self.key = None
+                self.apiKey = None
                 raise Exception("ERROR: API token already exists")
         else:
             # Raise exception for key error when there is no host for API token creation
