@@ -114,7 +114,7 @@ class GrafanaManager(object):
                 x = session.post(
                     'https://' + self.host + '/grafana/api/auth/keys', 
                     headers={'Content-Type': 'application/json'}, 
-                    json={"name":"newAPItestingfinal", "role":"Admin"}, 
+                    json={"name":"newAPI", "role":"Admin"}, 
                     verify=False
                 )
 
