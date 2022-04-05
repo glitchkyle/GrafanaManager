@@ -13,7 +13,7 @@ def createConfigFile(fileName, delimiter, host, key):
     """
     Creates configuration file containing host and generated API Token
 
-    :param fileName: The name of the configuration file
+    :param fileName: The path and file for where to create configuration file
     :type fileName: str
     :param delimiter: The delimiter of the configuration file
     :type delimiter: str
@@ -248,16 +248,12 @@ class GrafanaManager(object):
 
         :param dashboardDir: Path containing directory of dashboards to be uplaoded
         :type dashboardDir: str
+        :return: dictionary of dashboard file names and their upload status 
+        :rtype: dictionary (key = str, value = response)
         """
+        dashboardUploadStatus = {}
         for root, dirs, files in os.walk(dashboardDir):
             for file in files:
                 response = self.createDashboard(dashboardDir + '/' + file)
-
-                # Print Status
-                if response is not None:
-                    if response.status_code == 200:
-                        print(f"{file} was successfully uploaded")
-                    else:
-                        print(f"{file} was unsuccessfully uploaded")
-                else:
-                    print(f"Warning: Error in uploading dashboard {file}")
+                dashboardUploadStatus[file] = response
+        return dashboardUploadStatus
