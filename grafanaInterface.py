@@ -1,6 +1,4 @@
-import requests
-import json
-import os
+import requests, json, os
 from os.path import exists
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -65,15 +63,22 @@ class GrafanaManager(object):
 
     :param host: Grafana Host 
     :type host: str
+    :param username: Grafana Admin Username
+    :type username: str
+    :param password: Grafana Admin Password
+    :type password: str
     :param key: Grafana API token
     :type key: str
     """
-    def __init__(self, host=None, key=None):
+    def __init__(self, host=None, username=None, password=None, key=None):
         """
         Constructor Method
         """
         self.host = host 
         self.apiKey = key
+
+        self.username = username
+        self.password = password
     
     def getHost(self):
         return self.host
@@ -86,20 +91,194 @@ class GrafanaManager(object):
 
     def setAPIKey(self, key):
         self.apiKey = key
+    
+    def getUsername(self):
+        return self.username
+    
+    def setUsername(self, username):
+        self.username = username
+    
+    def getPassword(self):
+        return self.password
 
-    def createToken(self, username, password):
+    def setPassword(self, password):
+        self.password = password
+    
+    def setUserLogin(self, username, password):
+        self.username = username
+        self.password = password
+    
+    def createNewUser(self, newUserName, newUserEmail, newUserLogin, newUserPassword):
         """
-        Generate new API token 
+        Creates new Grafana user, automatically assigning to default organization
 
-        :param host: Grafana Host 
-        :type host: str
-        :param key: Grafana API token
-        :type key: str
+        :param newUserName: New Grafana User Name
+        :type newUserName: str
+        :param newUserEmail: New Grafana User Email
+        :type newUserEmail: str
+        :param newUserLogin: New Grafana User Login Username
+        :type newUserLogin: str
+        :param newUserPassword: New Grafana User Password
+        :type newUserPassword: str
+        :raises: Exception: if object has no username or password
+        :raises: Exception: if no host given to object
+        :return: response of API call
+        :rtype: response
+        """
+
+        session = requests.session()
+
+        newUser = {
+            "name": newUserName, 
+            "email": newUserEmail, 
+            "login": newUserLogin, 
+            "password": newUserPassword
+        }
+
+        if self.password is None or self.username is None:
+            # Raise exception for object lacking username or password
+            raise Exception("No password or username specified")
+        
+        if self.host is not None:
+            # Login to Grafana
+            session.post(
+                'https://' + self.host + '/grafana/login', 
+                headers={'Content-Type': 'application/json'},
+                json={"password": self.password,"user": self.username}, 
+                verify=False
+            )
+            # Create New User
+            x = session.post(
+                'https://' + self.host + '/grafana/api/admin/users', 
+                headers={'Content-Type': 'application/json', 'Accept': 'application/json'}, 
+                json=newUser, 
+                verify=False
+            )
+
+            return x
+        else:
+            # Raise exception for key error when there is no host for API token creation
+            raise Exception("No host specified")
+    
+    def findUser(self, credential):
+        session = requests.session()
+
+        if self.password is None or self.username is None:
+            # Raise exception for object lacking username or password
+            raise Exception("No password or username specified")
+        
+        if self.host is not None:
+            # Login to Grafana
+            session.post(
+                'https://' + self.host + '/grafana/login', 
+                headers={'Content-Type': 'application/json'},
+                json={"password": self.password,"user": self.username}, 
+                verify=False
+            )
+            # Find User
+            x = session.get(
+                'https://' + self.host + '/grafana/api/users/lookup?loginOrEmail=' + str(credential), 
+                headers={'Content-Type': 'application/json', 'Accept': 'application/json'}, 
+                verify=False
+            )
+
+            return x
+        else:
+            # Raise exception for key error when there is no host for API token creation
+            raise Exception("No host specified")
+    
+    def changePassword(self, credential, newPassword):
+        session = requests.session()
+
+        if self.password is None or self.username is None:
+            # Raise exception for object lacking username or password
+            raise Exception("No password or username specified")
+        
+        if self.host is not None:
+            # Login to Grafana
+            session.post(
+                'https://' + self.host + '/grafana/login', 
+                headers={'Content-Type': 'application/json'},
+                json={"password": self.password,"user": self.username}, 
+                verify=False
+            )
+
+            # Find user with credential
+            response = self.findUser(credential)
+            # Return none if user does not exist
+            if response.status_code != 200:
+                return None
+
+            # Get User ID
+            userId = json.loads(response.text)['id']
+
+            # Change Password
+            x = session.put(
+                'https://' + self.host + '/grafana/api/admin/users/' + str(userId) + '/password', 
+                headers={'Content-Type': 'application/json', 'Accept': 'application/json'}, 
+                json={"password": newPassword},
+                verify=False
+            )
+
+            return x
+        else:
+            # Raise exception for key error when there is no host for API token creation
+            raise Exception("No host specified")
+
+    def changeAdminPermission(self, credential, makeAdmin):
+        session = requests.session()
+
+        if self.password is None or self.username is None:
+            # Raise exception for object lacking username or password
+            raise Exception("No password or username specified")
+        
+        if self.host is not None:
+            # Login to Grafana
+            session.post(
+                'https://' + self.host + '/grafana/login', 
+                headers={'Content-Type': 'application/json'},
+                json={"password": self.password,"user": self.username}, 
+                verify=False
+            )
+
+            # Find user with credential
+            response = self.findUser(credential)
+            # Return none if user does not exist
+            if response.status_code != 200:
+                return None
+
+            # Get User ID
+            userId = json.loads(response.text)['id']
+
+            # Change Password
+            x = session.put(
+                'https://' + self.host + '/grafana/api/admin/users/' + str(userId) + '/permissions', 
+                headers={'Content-Type': 'application/json', 'Accept': 'application/json'}, 
+                json={"isGrafanaAdmin": makeAdmin},
+                verify=False
+            )
+
+            return x
+        else:
+            # Raise exception for key error when there is no host for API token creation
+            raise Exception("No host specified")
+
+    def createAdminToken(self, tokenName="newToken"):
+        """
+        Generate new admin API token for object
+
+        :param tokenName: New Token Name 
+        :type tokenName: str
+        :raises: Exception: if object has no username or password
         :raises: Exception: if API token already created
         :raises: Exception: if no host given to object
         """
 
         session = requests.session()
+
+        if self.password is None or self.username is None:
+            # Raise exception for object lacking username or password
+            raise Exception("No password or username specified")
 
         if self.host is not None:
             try:
@@ -107,14 +286,14 @@ class GrafanaManager(object):
                 session.post(
                     'https://' + self.host + '/grafana/login', 
                     headers={'Content-Type': 'application/json'},
-                    json={"password": password,"user":username}, 
+                    json={"password": self.password,"user": self.username}, 
                     verify=False
                 )
                 # Get API key
                 x = session.post(
                     'https://' + self.host + '/grafana/api/auth/keys', 
                     headers={'Content-Type': 'application/json'}, 
-                    json={"name":"newAPI", "role":"Admin"}, 
+                    json={"name": tokenName, "role":"Admin"}, 
                     verify=False
                 )
 
@@ -127,8 +306,6 @@ class GrafanaManager(object):
             # Raise exception for key error when there is no host for API token creation
             raise Exception("No host specified")
  
-    # POST Methods
-
     def createDashboard(self, fileDir):
         """
         Uploads given dashboard to Grafana host 
@@ -158,8 +335,6 @@ class GrafanaManager(object):
 
         x = requests.post(url, headers=headers, data=dashboardObject, verify=False)
         return x
-    
-    # DELETE Methods
 
     def deleteDashboard(self, dashboardUID):
         """
@@ -186,8 +361,6 @@ class GrafanaManager(object):
 
         x = requests.delete(url, headers=headers, verify=False)
         return x
-
-    # GET Methods
 
     def findDashboard(self, dashboardUID):
         """
