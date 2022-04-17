@@ -160,32 +160,33 @@ class GrafanaManager(object):
         if self.username is None:
             response['msg'] = "No Grafana host username specified to object."
             return response
-        
-        if self.host is not None:
-            # Login to Grafana
-            session.post(
-                'https://' + self.host + '/grafana/login', 
-                headers={'Content-Type': 'application/json'},
-                json={"password": self.password,"user": self.username}, 
-                verify=False
-            )
-            # Create New User
-            x = session.post(
-                'https://' + self.host + '/grafana/api/admin/users', 
-                headers={'Content-Type': 'application/json', 'Accept': 'application/json'}, 
-                json=newUser, 
-                verify=False
-            )
 
-            if x.status_code == 200:
-                response['success'] = True
-                response['msg'] = "Successfully created new Grafana user."
-                response['data'] = x
-            else:
-                response['msg'] = "Failed to create new Grafana user."
-                response['data'] = x
-        else:
+        if self.host is None:
             response['msg'] = "No Grafana host specified to object."
+            return response
+        
+        # Login to Grafana
+        session.post(
+            'https://' + self.host + '/grafana/login', 
+            headers={'Content-Type': 'application/json'},
+            json={"password": self.password,"user": self.username}, 
+            verify=False
+        )
+        # Create New User
+        x = session.post(
+            'https://' + self.host + '/grafana/api/admin/users', 
+            headers={'Content-Type': 'application/json', 'Accept': 'application/json'}, 
+            json=newUser, 
+            verify=False
+        )
+
+        if x.status_code == 200:
+            response['success'] = True
+            response['msg'] = "Successfully created new Grafana user."
+            response['data'] = x
+        else:
+            response['msg'] = "Failed to create new Grafana user."
+            response['data'] = x
 
         return response
     
@@ -213,30 +214,31 @@ class GrafanaManager(object):
             response['msg'] = "No Grafana host username specified to object."
             return response
         
-        if self.host is not None:
-            # Login to Grafana
-            session.post(
-                'https://' + self.host + '/grafana/login', 
-                headers={'Content-Type': 'application/json'},
-                json={"password": self.password,"user": self.username}, 
-                verify=False
-            )
-            # Find User
-            x = session.get(
-                'https://' + self.host + '/grafana/api/users/lookup?loginOrEmail=' + str(credential), 
-                headers={'Content-Type': 'application/json', 'Accept': 'application/json'}, 
-                verify=False
-            )
-
-            if x.status_code == 200:
-                response['success'] = True
-                response['msg'] = "Successfully found Grafana user."
-                response['data'] = x
-            else:
-                response['msg'] = "Failed to find Grafana user."
-                response['data'] = x
-        else:
+        if self.host is None:
             response['msg'] = "No Grafana host specified to object."
+            return response
+        
+        # Login to Grafana
+        session.post(
+            'https://' + self.host + '/grafana/login', 
+            headers={'Content-Type': 'application/json'},
+            json={"password": self.password,"user": self.username}, 
+            verify=False
+        )
+        # Find User
+        x = session.get(
+            'https://' + self.host + '/grafana/api/users/lookup?loginOrEmail=' + str(credential), 
+            headers={'Content-Type': 'application/json', 'Accept': 'application/json'}, 
+            verify=False
+        )
+
+        if x.status_code == 200:
+            response['success'] = True
+            response['msg'] = "Successfully found Grafana user."
+            response['data'] = x
+        else:
+            response['msg'] = "Failed to find Grafana user."
+            response['data'] = x
 
         return response
     
@@ -266,46 +268,47 @@ class GrafanaManager(object):
             response['msg'] = "No Grafana host username specified to object."
             return response
         
-        if self.host is not None:
-            # Login to Grafana
-            session.post(
-                'https://' + self.host + '/grafana/login', 
-                headers={'Content-Type': 'application/json'},
-                json={"password": self.password,"user": self.username}, 
-                verify=False
-            )
-
-            # Find user with credential
-            jsonResponse = self.findUser(credential)
-
-            responseData = jsonResponse['data']
-
-            # Return if user does not exist
-            if responseData.status_code != 200:
-                response['msg'] = "Failed to change password. User not found."
-                response['data'] = responseData
-                return response
-
-            # Get User ID
-            userId = json.loads(responseData.text)['id']
-
-            # Change Password
-            x = session.put(
-                'https://' + self.host + '/grafana/api/admin/users/' + str(userId) + '/password', 
-                headers={'Content-Type': 'application/json', 'Accept': 'application/json'}, 
-                json={"password": newPassword},
-                verify=False
-            )
-
-            if x.status_code == 200:
-                response['success'] = True
-                response['msg'] = "Successfully changed password for Grafana user."
-                response['data'] = x
-            else:
-                response['msg'] = "Failed to change password for Grafana user."
-                response['data'] = x
-        else:
+        if self.host is None:
             response['msg'] = "No Grafana host specified to object."
+            return response
+        
+        # Login to Grafana
+        session.post(
+            'https://' + self.host + '/grafana/login', 
+            headers={'Content-Type': 'application/json'},
+            json={"password": self.password,"user": self.username}, 
+            verify=False
+        )
+
+        # Find user with credential
+        jsonResponse = self.findUser(credential)
+
+        responseData = jsonResponse['data']
+
+        # Return if user does not exist
+        if responseData.status_code != 200:
+            response['msg'] = "Failed to change password. User not found."
+            response['data'] = responseData
+            return response
+
+        # Get User ID
+        userId = json.loads(responseData.text)['id']
+
+        # Change Password
+        x = session.put(
+            'https://' + self.host + '/grafana/api/admin/users/' + str(userId) + '/password', 
+            headers={'Content-Type': 'application/json', 'Accept': 'application/json'}, 
+            json={"password": newPassword},
+            verify=False
+        )
+
+        if x.status_code == 200:
+            response['success'] = True
+            response['msg'] = "Successfully changed password for Grafana user."
+            response['data'] = x
+        else:
+            response['msg'] = "Failed to change password for Grafana user."
+            response['data'] = x
 
         return response
 
@@ -334,47 +337,48 @@ class GrafanaManager(object):
         if self.username is None:
             response['msg'] = "No Grafana host username specified to object."
             return response
-        
-        if self.host is not None:
-            # Login to Grafana
-            session.post(
-                'https://' + self.host + '/grafana/login', 
-                headers={'Content-Type': 'application/json'},
-                json={"password": self.password,"user": self.username}, 
-                verify=False
-            )
 
-            # Find user with credential
-            jsonResponse = self.findUser(credential)
-
-            responseData = jsonResponse['data']
-
-            # Return if user does not exist
-            if responseData.status_code != 200:
-                response['msg'] = "Failed to change admin permissions. User not found."
-                response['data'] = responseData
-                return response
-
-            # Get User ID
-            userId = json.loads(responseData.text)['id']
-
-            # Change Admin Permission
-            x = session.put(
-                'https://' + self.host + '/grafana/api/admin/users/' + str(userId) + '/permissions', 
-                headers={'Content-Type': 'application/json', 'Accept': 'application/json'}, 
-                json={"isGrafanaAdmin": makeAdmin},
-                verify=False
-            )
-
-            if x.status_code == 200:
-                response['success'] = True
-                response['msg'] = "Successfully changed admin permissions for Grafana user."
-                response['data'] = x
-            else:
-                response['msg'] = "Failed to change admin permissions for Grafana user."
-                response['data'] = x
-        else:
+        if self.host is None:
             response['msg'] = "No Grafana host specified to object."
+            return response
+        
+        # Login to Grafana
+        session.post(
+            'https://' + self.host + '/grafana/login', 
+            headers={'Content-Type': 'application/json'},
+            json={"password": self.password,"user": self.username}, 
+            verify=False
+        )
+
+        # Find user with credential
+        jsonResponse = self.findUser(credential)
+
+        responseData = jsonResponse['data']
+
+        # Return if user does not exist
+        if responseData.status_code != 200:
+            response['msg'] = "Failed to change admin permissions. User not found."
+            response['data'] = responseData
+            return response
+
+        # Get User ID
+        userId = json.loads(responseData.text)['id']
+
+        # Change Admin Permission
+        x = session.put(
+            'https://' + self.host + '/grafana/api/admin/users/' + str(userId) + '/permissions', 
+            headers={'Content-Type': 'application/json', 'Accept': 'application/json'}, 
+            json={"isGrafanaAdmin": makeAdmin},
+            verify=False
+        )
+
+        if x.status_code == 200:
+            response['success'] = True
+            response['msg'] = "Successfully changed admin permissions for Grafana user."
+            response['data'] = x
+        else:
+            response['msg'] = "Failed to change admin permissions for Grafana user."
+            response['data'] = x
 
         return response
 
@@ -401,36 +405,39 @@ class GrafanaManager(object):
         if self.username is None:
             response['msg'] = "No Grafana host username specified to object."
             return response
-
-        if self.host is not None:
-            try:
-                # Login to Grafana
-                session.post(
-                    'https://' + self.host + '/grafana/login', 
-                    headers={'Content-Type': 'application/json'},
-                    json={"password": self.password,"user": self.username}, 
-                    verify=False
-                )
-                # Get API key
-                x = session.post(
-                    'https://' + self.host + '/grafana/api/auth/keys', 
-                    headers={'Content-Type': 'application/json'}, 
-                    json={"name": tokenName, "role":"Admin"}, 
-                    verify=False
-                )
-
-                if x.status_code == 200:
-                    self.apiKey = json.loads(x.text)['key']
-                    response['success'] = True
-                    response['msg'] = "Successfully created new Grafana API token."
-                    response['data'] = x
-                else:
-                    response['msg'] = "Failed to create new Grafana API token."
-                    response['data'] = x
-            except KeyError:
-                response['msg'] = "Grafana API token with given name has already been created."
-        else:
+        
+        if self.host is None:
             response['msg'] = "No Grafana host specified to object."
+            return response
+
+        try:
+            # Login to Grafana
+            session.post(
+                'https://' + self.host + '/grafana/login', 
+                headers={'Content-Type': 'application/json'},
+                json={"password": self.password,"user": self.username}, 
+                verify=False
+            )
+            # Get API key
+            x = session.post(
+                'https://' + self.host + '/grafana/api/auth/keys', 
+                headers={'Content-Type': 'application/json'}, 
+                json={"name": tokenName, "role":"Admin"}, 
+                verify=False
+            )
+
+            if x.status_code == 200:
+                self.apiKey = json.loads(x.text)['key']
+                response['success'] = True
+                response['msg'] = "Successfully created new Grafana API token."
+                response['data'] = x
+            else:
+                response['msg'] = "Failed to create new Grafana API token."
+                response['data'] = x
+        except KeyError:
+            response['msg'] = "Grafana API token with given name has already been created."
+        except:
+            response['msg'] = "Failed to create new Grafana API token."
 
         return response
  
@@ -454,6 +461,10 @@ class GrafanaManager(object):
         
         if self.username is None:
             response['msg'] = "No Grafana host username specified to object."
+            return response
+
+        if self.host is None:
+            response['msg'] = "No Grafana host specified to object."
             return response
 
         url = 'https://' + self.host + '/grafana/api/dashboards/db'
@@ -499,6 +510,10 @@ class GrafanaManager(object):
         if self.username is None:
             response['msg'] = "No Grafana host username specified to object."
             return response
+        
+        if self.host is None:
+            response['msg'] = "No Grafana host specified to object."
+            return response
 
         url = 'https://' + self.host + '/grafana/api/dashboards/uid/' + dashboardUID
 
@@ -540,6 +555,10 @@ class GrafanaManager(object):
         if self.username is None:
             response['msg'] = "No Grafana host username specified to object."
             return response
+        
+        if self.host is None:
+            response['msg'] = "No Grafana host specified to object."
+            return response
 
         url = 'https://' + self.host + '/grafana/api/dashboards/uid/' + dashboardUID
 
@@ -563,8 +582,6 @@ class GrafanaManager(object):
         """
         Locates home dashboard in Grafana host
 
-        :param dashboardUID: Grafana Dashboard Unique ID, usually written within JSON
-        :type dashboardUID: str
         :return: Function Status
         :rtype: JSON dictionary 
         """
@@ -579,6 +596,10 @@ class GrafanaManager(object):
         
         if self.username is None:
             response['msg'] = "No Grafana host username specified to object."
+            return response
+        
+        if self.host is None:
+            response['msg'] = "No Grafana host specified to object."
             return response
 
         url = 'https://' + self.host + '/grafana/api/dashboards/home'
@@ -612,12 +633,29 @@ class GrafanaManager(object):
         "success": False,
         "msg": None
         }
-        dashboardUploadStatus = {}
-        for root, dirs, files in os.walk(dashboardDir):
-            for file in files:
-                response = self.createDashboard(dashboardDir + '/' + file)
-                dashboardUploadStatus[file] = response
-        response['success'] = True
-        response['msg'] = "Successfully uploaded dashboards"
-        response['data'] = dashboardUploadStatus
+
+        if self.password is None:
+            response['msg'] = "No Grafana host admin password specified to object."
+            return response
+        
+        if self.username is None:
+            response['msg'] = "No Grafana host username specified to object."
+            return response
+        
+        if self.host is None:
+            response['msg'] = "No Grafana host specified to object."
+            return response
+
+        if(exists(dashboardDir)):
+            dashboardUploadStatus = {}
+            for root, dirs, files in os.walk(dashboardDir):
+                for file in files:
+                    response = self.createDashboard(dashboardDir + '/' + file)
+                    dashboardUploadStatus[file] = response
+            response['success'] = True
+            response['msg'] = "Successfully uploaded dashboards"
+            response['data'] = dashboardUploadStatus
+        else:
+            response['msg'] = "Given directory not found. Failed to upload dashboards."
+
         return response
