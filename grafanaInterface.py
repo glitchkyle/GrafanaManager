@@ -19,11 +19,21 @@ def createConfigFile(fileName, delimiter, host, key):
     :type host: str
     :param key: Grafana generated API Token
     :type key: str
+    :return: Function Status
+    :rtype: JSON dictionary
     """
+    response = {
+        "success": False,
+        "msg": None
+    }
 
     with open(fileName, 'w') as cf:
         cf.write('host' + delimiter + host + '\n')
         cf.write('apiKey' + delimiter + key)
+        response['success'] = True
+        response['msg'] = "Successfully created configuration file."
+    
+    return response
 
 def parseConfigFile(configFile, delimiter):
     """
@@ -33,12 +43,14 @@ def parseConfigFile(configFile, delimiter):
     :type configFile: str
     :param delimiter: The delimiter of the configuration file
     :type delimiter: str
-    :raises: Exception: if config file not found
-    :return: host containing Grafana Host
-    :rtype: str 
-    :return: generated API Token
-    :rtype: str
+    :return: Function Status
+    :rtype: JSON dictionary
     """
+    response = {
+        "success": False,
+        "msg": None
+    }
+
     host = None
     key = None
 
@@ -50,12 +62,16 @@ def parseConfigFile(configFile, delimiter):
                 line = currentLine.split(delimiter)
                 if(line[0] == 'host'):
                     host = str(line[1]).strip()
+                    response['host'] = host
                 elif(line[0] == 'apiKey'):
                     key = str(line[1]).strip()
+                    response['key'] = key
+            response['success'] = True
+            response['msg'] = "Successfully parsed config file."
     else:
-        raise Exception("Configuration file not found")
-    
-    return host, key
+        response['msg'] = "No config file found. Failed to parse config file."
+
+    return response
 
 class GrafanaManager(object):
     """
@@ -120,11 +136,13 @@ class GrafanaManager(object):
         :type newUserLogin: str
         :param newUserPassword: New Grafana User Password
         :type newUserPassword: str
-        :raises: Exception: if object has no username or password
-        :raises: Exception: if no host given to object
-        :return: response of API call
-        :rtype: response
+        :return: Function Status
+        :rtype: JSON dictionary 
         """
+        response = {
+        "success": False,
+        "msg": None
+        }
 
         session = requests.session()
 
@@ -135,9 +153,13 @@ class GrafanaManager(object):
             "password": newUserPassword
         }
 
-        if self.password is None or self.username is None:
-            # Raise exception for object lacking username or password
-            raise Exception("No password or username specified")
+        if self.password is None:
+            response['msg'] = "No Grafana host admin password specified to object."
+            return response
+        
+        if self.username is None:
+            response['msg'] = "No Grafana host username specified to object."
+            return response
         
         if self.host is not None:
             # Login to Grafana
@@ -155,17 +177,41 @@ class GrafanaManager(object):
                 verify=False
             )
 
-            return x
+            if x.status_code == 200:
+                response['success'] = True
+                response['msg'] = "Successfully created new Grafana user."
+                response['data'] = x
+            else:
+                response['msg'] = "Failed to create new Grafana user."
+                response['data'] = x
         else:
-            # Raise exception for key error when there is no host for API token creation
-            raise Exception("No host specified")
+            response['msg'] = "No Grafana host specified to object."
+
+        return response
     
     def findUser(self, credential):
+        """
+        Find Grafana user
+
+        :param credential: Grafana username or email to find
+        :type credential: str
+        :return: Function Status
+        :rtype: JSON dictionary 
+        """
+        response = {
+        "success": False,
+        "msg": None
+        }
+
         session = requests.session()
 
-        if self.password is None or self.username is None:
-            # Raise exception for object lacking username or password
-            raise Exception("No password or username specified")
+        if self.password is None:
+            response['msg'] = "No Grafana host admin password specified to object."
+            return response
+        
+        if self.username is None:
+            response['msg'] = "No Grafana host username specified to object."
+            return response
         
         if self.host is not None:
             # Login to Grafana
@@ -182,17 +228,43 @@ class GrafanaManager(object):
                 verify=False
             )
 
-            return x
+            if x.status_code == 200:
+                response['success'] = True
+                response['msg'] = "Successfully found Grafana user."
+                response['data'] = x
+            else:
+                response['msg'] = "Failed to find Grafana user."
+                response['data'] = x
         else:
-            # Raise exception for key error when there is no host for API token creation
-            raise Exception("No host specified")
+            response['msg'] = "No Grafana host specified to object."
+
+        return response
     
     def changePassword(self, credential, newPassword):
+        """
+        Change Grafana user password
+
+        :param credential: Grafana username or email to be updated
+        :type credential: str
+        :param newPassword: New Password of given user
+        :type newPassword: str
+        :return: Function Status
+        :rtype: JSON dictionary 
+        """
+        response = {
+        "success": False,
+        "msg": None
+        }
+
         session = requests.session()
 
-        if self.password is None or self.username is None:
-            # Raise exception for object lacking username or password
-            raise Exception("No password or username specified")
+        if self.password is None:
+            response['msg'] = "No Grafana host admin password specified to object."
+            return response
+        
+        if self.username is None:
+            response['msg'] = "No Grafana host username specified to object."
+            return response
         
         if self.host is not None:
             # Login to Grafana
@@ -204,13 +276,18 @@ class GrafanaManager(object):
             )
 
             # Find user with credential
-            response = self.findUser(credential)
-            # Return none if user does not exist
-            if response.status_code != 200:
-                return None
+            jsonResponse = self.findUser(credential)
+
+            responseData = jsonResponse['data']
+
+            # Return if user does not exist
+            if responseData.status_code != 200:
+                response['msg'] = "Failed to change password. User not found."
+                response['data'] = responseData
+                return response
 
             # Get User ID
-            userId = json.loads(response.text)['id']
+            userId = json.loads(responseData.text)['id']
 
             # Change Password
             x = session.put(
@@ -220,17 +297,43 @@ class GrafanaManager(object):
                 verify=False
             )
 
-            return x
+            if x.status_code == 200:
+                response['success'] = True
+                response['msg'] = "Successfully changed password for Grafana user."
+                response['data'] = x
+            else:
+                response['msg'] = "Failed to change password for Grafana user."
+                response['data'] = x
         else:
-            # Raise exception for key error when there is no host for API token creation
-            raise Exception("No host specified")
+            response['msg'] = "No Grafana host specified to object."
+
+        return response
 
     def changeAdminPermission(self, credential, makeAdmin):
+        """
+        Change Grafana user admin permissions
+
+        :param credential: Grafana username or email to be updated
+        :type credential: str
+        :param makeAdmin: Give Admission Permission
+        :type makeAdmin: bool
+        :return: Function Status
+        :rtype: JSON dictionary 
+        """
+        response = {
+        "success": False,
+        "msg": None
+        }
+
         session = requests.session()
 
-        if self.password is None or self.username is None:
-            # Raise exception for object lacking username or password
-            raise Exception("No password or username specified")
+        if self.password is None:
+            response['msg'] = "No Grafana host admin password specified to object."
+            return response
+        
+        if self.username is None:
+            response['msg'] = "No Grafana host username specified to object."
+            return response
         
         if self.host is not None:
             # Login to Grafana
@@ -242,15 +345,20 @@ class GrafanaManager(object):
             )
 
             # Find user with credential
-            response = self.findUser(credential)
-            # Return none if user does not exist
-            if response.status_code != 200:
-                return None
+            jsonResponse = self.findUser(credential)
+
+            responseData = jsonResponse['data']
+
+            # Return if user does not exist
+            if responseData.status_code != 200:
+                response['msg'] = "Failed to change admin permissions. User not found."
+                response['data'] = responseData
+                return response
 
             # Get User ID
-            userId = json.loads(response.text)['id']
+            userId = json.loads(responseData.text)['id']
 
-            # Change Password
+            # Change Admin Permission
             x = session.put(
                 'https://' + self.host + '/grafana/api/admin/users/' + str(userId) + '/permissions', 
                 headers={'Content-Type': 'application/json', 'Accept': 'application/json'}, 
@@ -258,27 +366,41 @@ class GrafanaManager(object):
                 verify=False
             )
 
-            return x
+            if x.status_code == 200:
+                response['success'] = True
+                response['msg'] = "Successfully changed admin permissions for Grafana user."
+                response['data'] = x
+            else:
+                response['msg'] = "Failed to change admin permissions for Grafana user."
+                response['data'] = x
         else:
-            # Raise exception for key error when there is no host for API token creation
-            raise Exception("No host specified")
+            response['msg'] = "No Grafana host specified to object."
+
+        return response
 
     def createAdminToken(self, tokenName="newToken"):
         """
         Generate new admin API token for object
 
-        :param tokenName: New Token Name 
+        :param tokenName: Name of new token
         :type tokenName: str
-        :raises: Exception: if object has no username or password
-        :raises: Exception: if API token already created
-        :raises: Exception: if no host given to object
+        :return: Function Status
+        :rtype: JSON dictionary 
         """
+        response = {
+        "success": False,
+        "msg": None
+        }
 
         session = requests.session()
 
-        if self.password is None or self.username is None:
-            # Raise exception for object lacking username or password
-            raise Exception("No password or username specified")
+        if self.password is None:
+            response['msg'] = "No Grafana host admin password specified to object."
+            return response
+        
+        if self.username is None:
+            response['msg'] = "No Grafana host username specified to object."
+            return response
 
         if self.host is not None:
             try:
@@ -297,31 +419,42 @@ class GrafanaManager(object):
                     verify=False
                 )
 
-                self.apiKey = json.loads(x.text)['key']
+                if x.status_code == 200:
+                    self.apiKey = json.loads(x.text)['key']
+                    response['success'] = True
+                    response['msg'] = "Successfully created new Grafana API token."
+                    response['data'] = x
+                else:
+                    response['msg'] = "Failed to create new Grafana API token."
+                    response['data'] = x
             except KeyError:
-                # Raise exception for key error when there is an existing API token
-                self.apiKey = None
-                raise Exception("API token already exists")
+                response['msg'] = "Grafana API token with given name has already been created."
         else:
-            # Raise exception for key error when there is no host for API token creation
-            raise Exception("No host specified")
+            response['msg'] = "No Grafana host specified to object."
+
+        return response
  
     def createDashboard(self, fileDir):
         """
-        Uploads given dashboard to Grafana host 
+        Generate new admin API token for object
 
         :param fileDir: Path to JSON containing Grafana dashboard
         :type fileDir: str
-        :raises: Exception: if object has no existing host file
-        :raises: Exception: if object has no existing API key
-        :return: response of API call
-        :rtype: response
+        :return: Function Status
+        :rtype: JSON dictionary 
         """
-        if self.host is None:
-            raise Exception("No host specified")
+        response = {
+        "success": False,
+        "msg": None
+        }
 
-        if self.apiKey is None:
-            raise Exception("No admin API key specified")
+        if self.password is None:
+            response['msg'] = "No Grafana host admin password specified to object."
+            return response
+        
+        if self.username is None:
+            response['msg'] = "No Grafana host username specified to object."
+            return response
 
         url = 'https://' + self.host + '/grafana/api/dashboards/db'
 
@@ -334,7 +467,16 @@ class GrafanaManager(object):
         dashboardObject = open(fileDir).read()
 
         x = requests.post(url, headers=headers, data=dashboardObject, verify=False)
-        return x
+
+        if x.status_code == 200:
+            response['success'] = True
+            response['msg'] = "Successfully uploaded dashboard."
+            response['data'] = x
+        else:
+            response['msg'] = "Failed to upload dashboard."
+            response['data'] = x
+        
+        return response
 
     def deleteDashboard(self, dashboardUID):
         """
@@ -342,16 +484,21 @@ class GrafanaManager(object):
 
         :param dashboardUID: Grafana Dashboard Unique ID, usually written within JSON
         :type dashboardUID: str
-        :raises: Exception: if object has no existing host file
-        :raises: Exception: if object has no existing API key
-        :return: response of API call
-        :rtype: response
+        :return: Function Status
+        :rtype: JSON dictionary 
         """
-        if self.host is None:
-            raise Exception("No host specified")
+        response = {
+        "success": False,
+        "msg": None
+        }
 
-        if self.apiKey is None:
-            raise Exception("No admin API key specified")
+        if self.password is None:
+            response['msg'] = "No Grafana host admin password specified to object."
+            return response
+        
+        if self.username is None:
+            response['msg'] = "No Grafana host username specified to object."
+            return response
 
         url = 'https://' + self.host + '/grafana/api/dashboards/uid/' + dashboardUID
 
@@ -360,7 +507,17 @@ class GrafanaManager(object):
         }
 
         x = requests.delete(url, headers=headers, verify=False)
-        return x
+
+        if x.status_code == 200:
+            response['success'] = True
+            response['msg'] = "Successfully deleted dashboard."
+            response['data'] = x
+        else:
+            response['msg'] = "Failed to delete dashboard."
+            response['data'] = x
+        
+        return response
+
 
     def findDashboard(self, dashboardUID):
         """
@@ -368,16 +525,21 @@ class GrafanaManager(object):
 
         :param dashboardUID: Grafana Dashboard Unique ID, usually written within JSON
         :type dashboardUID: str
-        :raises: Exception: if object has no existing host file
-        :raises: Exception: if object has no existing API key
-        :return: response of API call
-        :rtype: response
+        :return: Function Status
+        :rtype: JSON dictionary 
         """
-        if self.host is None:
-            raise Exception("No host specified")
+        response = {
+        "success": False,
+        "msg": None
+        }
 
-        if self.apiKey is None:
-            raise Exception("No admin API key specified")
+        if self.password is None:
+            response['msg'] = "No Grafana host admin password specified to object."
+            return response
+        
+        if self.username is None:
+            response['msg'] = "No Grafana host username specified to object."
+            return response
 
         url = 'https://' + self.host + '/grafana/api/dashboards/uid/' + dashboardUID
 
@@ -386,7 +548,16 @@ class GrafanaManager(object):
         }
 
         x = requests.get(url, headers=headers, verify=False)
-        return x
+        
+        if x.status_code == 200:
+            response['success'] = True
+            response['msg'] = "Successfully found dashboard."
+            response['data'] = x
+        else:
+            response['msg'] = "Failed to find dashboard."
+            response['data'] = x
+        
+        return response
     
     def getHomeDashboard(self):
         """
@@ -394,16 +565,21 @@ class GrafanaManager(object):
 
         :param dashboardUID: Grafana Dashboard Unique ID, usually written within JSON
         :type dashboardUID: str
-        :raises: Exception: if object has no existing host file
-        :raises: Exception: if object has no existing API key
-        :return: response of API call
-        :rtype: response
+        :return: Function Status
+        :rtype: JSON dictionary 
         """
-        if self.host is None:
-            raise Exception("No host specified")
+        response = {
+        "success": False,
+        "msg": None
+        }
 
-        if self.apiKey is None:
-            raise Exception("No admin API key specified")
+        if self.password is None:
+            response['msg'] = "No Grafana host admin password specified to object."
+            return response
+        
+        if self.username is None:
+            response['msg'] = "No Grafana host username specified to object."
+            return response
 
         url = 'https://' + self.host + '/grafana/api/dashboards/home'
 
@@ -412,21 +588,36 @@ class GrafanaManager(object):
         }
 
         x = requests.get(url, headers=headers, verify=False)
-        return x
+        
+        if x.status_code == 200:
+            response['success'] = True
+            response['msg'] = "Successfully found home dashboard."
+            response['data'] = x
+        else:
+            response['msg'] = "Failed to find home dashboard."
+            response['data'] = x
+        
+        return response
     
     def uploadDashboards(self, dashboardDir):
         """
-        Uploads each dashboard in given directory containing 
-        valid host and Grafana API key
+        Uploads all dashboards in given dashboard directory
 
-        :param dashboardDir: Path containing directory of dashboards to be uplaoded
+        :param dashboardDir: Path containing directory of dashboards to be uploaded
         :type dashboardDir: str
-        :return: dictionary of dashboard file names and their upload status 
-        :rtype: dictionary (key = str, value = response)
+        :return: Function Status
+        :rtype: JSON dictionary 
         """
+        response = {
+        "success": False,
+        "msg": None
+        }
         dashboardUploadStatus = {}
         for root, dirs, files in os.walk(dashboardDir):
             for file in files:
                 response = self.createDashboard(dashboardDir + '/' + file)
                 dashboardUploadStatus[file] = response
-        return dashboardUploadStatus
+        response['success'] = True
+        response['msg'] = "Successfully uploaded dashboards"
+        response['data'] = dashboardUploadStatus
+        return response
