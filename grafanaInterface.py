@@ -7,7 +7,7 @@ from urllib3.exceptions import InsecureRequestWarning
 # Prevents invalid certificate warning
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning) 
 
-def createConfigFile(fileName, delimiter, host, key):
+def createConfigFile(fileName, delimiter, host, username, password, key):
     """
     Creates configuration file containing host and generated API Token
 
@@ -17,6 +17,10 @@ def createConfigFile(fileName, delimiter, host, key):
     :type delimiter: str
     :param host: Grafana Host
     :type host: str
+    :param username: Grafana Admin Username
+    :type username: str
+    :param password: Grafana Admin Password
+    :type password: str
     :param key: Grafana generated API Token
     :type key: str
     :return: Function Status
@@ -29,7 +33,10 @@ def createConfigFile(fileName, delimiter, host, key):
 
     with open(fileName, 'w') as cf:
         cf.write('host' + delimiter + host + '\n')
+        cf.write('username' + delimiter + username + '\n')
+        cf.write('password' + delimiter + password + '\n')
         cf.write('apiKey' + delimiter + key)
+        
         response['success'] = True
         response['msg'] = "Successfully created configuration file."
     
@@ -63,6 +70,12 @@ def parseConfigFile(configFile, delimiter):
                 if(line[0] == 'host'):
                     host = str(line[1]).strip()
                     response['host'] = host
+                elif(line[0] == 'username'):
+                    username = str(line[1]).strip()
+                    response['username'] = username
+                elif(line[0] == 'password'):
+                    password = str(line[1]).strip()
+                    response['password'] = password
                 elif(line[0] == 'apiKey'):
                     key = str(line[1]).strip()
                     response['key'] = key
