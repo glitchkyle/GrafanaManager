@@ -188,6 +188,8 @@ class GrafanaManager(object):
             response['msg'] = "Failed to create new Grafana user."
             response['data'] = x
 
+        session.close()
+
         return response
     
     def findUser(self, credential):
@@ -239,6 +241,8 @@ class GrafanaManager(object):
         else:
             response['msg'] = "Failed to find Grafana user."
             response['data'] = x
+
+        session.close()
 
         return response
     
@@ -309,6 +313,8 @@ class GrafanaManager(object):
         else:
             response['msg'] = "Failed to change password for Grafana user."
             response['data'] = x
+        
+        session.close()
 
         return response
 
@@ -380,6 +386,8 @@ class GrafanaManager(object):
             response['msg'] = "Failed to change admin permissions for Grafana user."
             response['data'] = x
 
+        session.close()
+
         return response
 
     def createAdminToken(self, tokenName="newToken"):
@@ -439,6 +447,8 @@ class GrafanaManager(object):
         except:
             response['msg'] = "Failed to create new Grafana API token."
 
+        session.close()
+
         return response
  
     def createDashboard(self, fileDir):
@@ -474,8 +484,10 @@ class GrafanaManager(object):
             'User-Agent': "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36",
             'Authorization': "Bearer " + self.apiKey
         }
-
-        dashboardObject = open(fileDir).read()
+        
+        dashboardFile = open(fileDir)
+        dashboardObject = dashboardFile.read()
+        dashboardFile.close()
 
         x = requests.post(url, headers=headers, data=dashboardObject, verify=False)
 
