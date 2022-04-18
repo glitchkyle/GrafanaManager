@@ -663,7 +663,7 @@ class GrafanaManager(object):
                     response = self.createDashboard(dashboardDir + '/' + file)
                     dashboardUploadStatus[file] = response
             response['success'] = True
-            response['msg'] = "Successfully uploaded dashboards"
+            response['msg'] = "Successfully uploaded dashboards. Check data for specific information."
             response['data'] = dashboardUploadStatus
         else:
             response['msg'] = "Given directory not found. Failed to upload dashboards."
