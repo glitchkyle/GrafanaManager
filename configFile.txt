@@ -1,2 +1,0 @@
-host-192.12.245.165
-apiKey-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
