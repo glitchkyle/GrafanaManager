@@ -13,11 +13,11 @@ interface = GrafanaManager(host, username, password, token)
 
 class TestGrafanaMethods(unittest.TestCase):
     def test_CreateConfigFile(self):
-        result = createConfigFile('configFile.txt', '-', host, token)
+        result = interface.createConfigFile('configFile.txt', '-')
         self.assertEqual(True, result['success'], result['msg'])
     
     def test_ParseConfigFile(self):
-        result = parseConfigFile('configFile.txt', '-')
+        result = interface.parseConfigFile('configFile.txt', '-')
         self.assertEqual(True, result['success'], result['msg'])
 
     def test_CreateNewUser(self):
@@ -28,14 +28,6 @@ class TestGrafanaMethods(unittest.TestCase):
         result = interface.findUser('userLogin')
         self.assertEqual(True, result['success'], result['msg'])
 
-    # def test_ChangePassword(self):
-    #     result = interface.changePassword('userLogin', 'newPassword')
-    #     self.assertEqual(True, result['success'], result['msg'])
-
-    # def test_ChangeAdminPermission(self):
-    #     result = interface.changeAdminPermission('userLogin', True)
-    #     self.assertEqual(True, result['success'], result['msg'])
-
     def test_CreateAdminToken(self):
         result = interface.createAdminToken()
         self.assertEqual(True, result['success'], result['msg'])
@@ -43,10 +35,6 @@ class TestGrafanaMethods(unittest.TestCase):
     def test_CreateDashboard(self):
         result = interface.createDashboard('Dashboards/networkDashboard.json')
         self.assertEqual(True, result['success'], result['msg'])
-    
-    # def test_FindDashboard(self):
-    #     result = interface.findDashboard('dHEquNzGz')
-    #     self.assertEqual(True, result['success'], result['msg'])
 
     def test_DeleteDashboard(self):
         result = interface.deleteDashboard('dHEquNzGz')
@@ -58,6 +46,20 @@ class TestGrafanaMethods(unittest.TestCase):
 
     def test_UploadDashboards(self):
         result = interface.uploadDashboards('Dashboards')
+        self.assertEqual(True, result['success'], result['msg'])
+    
+    # POST PROCESS TESTS (FAIL DURING INITIAL RUN OF UNIT TESTING)
+
+    def test_ChangePassword(self):
+        result = interface.changePassword('userLogin', 'newPassword')
+        self.assertEqual(True, result['success'], result['msg'])
+
+    def test_ChangeAdminPermission(self):
+        result = interface.changeAdminPermission('userLogin', True)
+        self.assertEqual(True, result['success'], result['msg'])
+    
+    def test_FindDashboard(self):
+        result = interface.findDashboard('dHEquNzGz')
         self.assertEqual(True, result['success'], result['msg'])
 
 if __name__ == "__main__":

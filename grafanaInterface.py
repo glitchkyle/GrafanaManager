@@ -7,85 +7,6 @@ from urllib3.exceptions import InsecureRequestWarning
 # Prevents invalid certificate warning
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning) 
 
-def createConfigFile(fileName, delimiter, host, username, password, key):
-    """
-    Creates configuration file containing host and generated API Token
-
-    :param fileName: The path and file for where to create configuration file
-    :type fileName: str
-    :param delimiter: The delimiter of the configuration file
-    :type delimiter: str
-    :param host: Grafana Host
-    :type host: str
-    :param username: Grafana Admin Username
-    :type username: str
-    :param password: Grafana Admin Password
-    :type password: str
-    :param key: Grafana generated API Token
-    :type key: str
-    :return: Function Status
-    :rtype: JSON dictionary
-    """
-    response = {
-        "success": False,
-        "msg": None
-    }
-
-    with open(fileName, 'w') as cf:
-        cf.write('host' + delimiter + host + '\n')
-        cf.write('username' + delimiter + username + '\n')
-        cf.write('password' + delimiter + password + '\n')
-        cf.write('apiKey' + delimiter + key)
-        
-        response['success'] = True
-        response['msg'] = "Successfully created configuration file."
-    
-    return response
-
-def parseConfigFile(configFile, delimiter):
-    """
-    Reads config file containing host and generated API Token
-
-    :param configFile: The configuration file path
-    :type configFile: str
-    :param delimiter: The delimiter of the configuration file
-    :type delimiter: str
-    :return: Function Status
-    :rtype: JSON dictionary
-    """
-    response = {
-        "success": False,
-        "msg": None
-    }
-
-    host = None
-    key = None
-
-    # Check if the configuration file exists
-    if(exists(configFile)):
-        # Assign default host and key 
-        with open(configFile, 'r') as cf:
-            for currentLine in cf:
-                line = currentLine.split(delimiter)
-                if(line[0] == 'host'):
-                    host = str(line[1]).strip()
-                    response['host'] = host
-                elif(line[0] == 'username'):
-                    username = str(line[1]).strip()
-                    response['username'] = username
-                elif(line[0] == 'password'):
-                    password = str(line[1]).strip()
-                    response['password'] = password
-                elif(line[0] == 'apiKey'):
-                    key = str(line[1]).strip()
-                    response['key'] = key
-            response['success'] = True
-            response['msg'] = "Successfully parsed config file."
-    else:
-        response['msg'] = "No config file found. Failed to parse config file."
-
-    return response
-
 class GrafanaManager(object):
     """
     Grafana Manager interacts with Grafana Host using Grafana's REST APIs 
@@ -136,6 +57,90 @@ class GrafanaManager(object):
     def setUserLogin(self, username, password):
         self.username = username
         self.password = password
+
+    def createConfigFile(self, fileName, delimiter):
+        """
+        Creates configuration file representation of Grafana Manager object. 
+        Config file contains host, admin username, admin password, and API token. 
+
+        :param fileName: The path and file for where to create configuration file
+        :type fileName: str
+        :param delimiter: The delimiter of the configuration file
+        :type delimiter: str
+        :return: Function Status
+        :rtype: JSON dictionary
+        """
+        response = {
+            "success": False,
+            "msg": None
+        }
+
+        configFileHost, configFileUsername, configFilePassword, configFileKey = "", "", "", ""
+
+        if self.host is not None:
+            configFileHost = self.host
+        
+        if self.username is not None:
+            configFileUsername = self.username
+
+        if self.password is not None:
+            configFilePassword = self.password
+
+        if self.apiKey is not None:
+            configFileKey = self.apiKey
+
+        with open(fileName, 'w') as cf:
+            cf.write('host' + delimiter + configFileHost + '\n')
+            cf.write('username' + delimiter + configFileUsername + '\n')
+            cf.write('password' + delimiter + configFilePassword + '\n')
+            cf.write('apiKey' + delimiter + configFileKey)
+            
+            response['success'] = True
+            response['msg'] = "Successfully created configuration file."
+    
+        return response
+
+    def parseConfigFile(self, configFile, delimiter):
+        """
+        Reads config file representation of Grafana Manager object and overwrites current object's values.
+
+        :param configFile: The configuration file path
+        :type configFile: str
+        :param delimiter: The delimiter of the configuration file
+        :type delimiter: str
+        :return: Function Status
+        :rtype: JSON dictionary
+        """
+        response = {
+            "success": False,
+            "msg": None
+        }
+
+        # Check if the configuration file exists
+        if(exists(configFile)):
+            # Assign default host and key 
+            with open(configFile, 'r') as cf:
+                for currentLine in cf:
+                    line = currentLine.split(delimiter)
+                    if(line[0] == 'host'):
+                        host = str(line[1]).strip()
+                        self.host = host
+                    elif(line[0] == 'username'):
+                        username = str(line[1]).strip()
+                        self.username = username
+                    elif(line[0] == 'password'):
+                        password = str(line[1]).strip()
+                        self.password = password
+                    elif(line[0] == 'apiKey'):
+                        key = str(line[1]).strip()
+                        self.apiKey = key
+
+                response['success'] = True
+                response['msg'] = "Successfully parsed config file."
+        else:
+            response['msg'] = "No config file found. Failed to parse config file."
+
+        return response
     
     def createNewUser(self, newUserName, newUserEmail, newUserLogin, newUserPassword):
         """
@@ -478,12 +483,8 @@ class GrafanaManager(object):
         "msg": None
         }
 
-        if self.password is None:
-            response['msg'] = "No Grafana host admin password specified to object."
-            return response
-        
-        if self.username is None:
-            response['msg'] = "No Grafana host username specified to object."
+        if self.apiKey is None:
+            response['msg'] = "No Grafana API token specified to object."
             return response
 
         if self.host is None:
@@ -528,12 +529,8 @@ class GrafanaManager(object):
         "msg": None
         }
 
-        if self.password is None:
-            response['msg'] = "No Grafana host admin password specified to object."
-            return response
-        
-        if self.username is None:
-            response['msg'] = "No Grafana host username specified to object."
+        if self.apiKey is None:
+            response['msg'] = "No Grafana API token specified to object."
             return response
         
         if self.host is None:
@@ -573,12 +570,8 @@ class GrafanaManager(object):
         "msg": None
         }
 
-        if self.password is None:
-            response['msg'] = "No Grafana host admin password specified to object."
-            return response
-        
-        if self.username is None:
-            response['msg'] = "No Grafana host username specified to object."
+        if self.apiKey is None:
+            response['msg'] = "No Grafana API token specified to object."
             return response
         
         if self.host is None:
@@ -615,12 +608,8 @@ class GrafanaManager(object):
         "msg": None
         }
 
-        if self.password is None:
-            response['msg'] = "No Grafana host admin password specified to object."
-            return response
-        
-        if self.username is None:
-            response['msg'] = "No Grafana host username specified to object."
+        if self.apiKey is None:
+            response['msg'] = "No Grafana API token specified to object."
             return response
         
         if self.host is None:
@@ -659,12 +648,8 @@ class GrafanaManager(object):
         "msg": None
         }
 
-        if self.password is None:
-            response['msg'] = "No Grafana host admin password specified to object."
-            return response
-        
-        if self.username is None:
-            response['msg'] = "No Grafana host username specified to object."
+        if self.apiKey is None:
+            response['msg'] = "No Grafana API token specified to object."
             return response
         
         if self.host is None:
