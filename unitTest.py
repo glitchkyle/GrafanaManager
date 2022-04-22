@@ -7,9 +7,8 @@ requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 host = str(input())
 username = str(input())
 password = str(input())
-token = str(input())
 
-interface = GrafanaManager(host, username, password, token)
+interface = GrafanaManager(host, username, password)
 
 class TestGrafanaMethods(unittest.TestCase):
     def test_CreateConfigFile(self):
@@ -26,6 +25,10 @@ class TestGrafanaMethods(unittest.TestCase):
 
     def test_FindUser(self):
         result = interface.findUser('userLogin')
+        self.assertEqual(True, result['success'], result['msg'])
+    
+    def test_GetAllUsers(self):
+        result = interface.getAllUsers()
         self.assertEqual(True, result['success'], result['msg'])
 
     def test_CreateAdminToken(self):
@@ -50,17 +53,17 @@ class TestGrafanaMethods(unittest.TestCase):
     
     # POST PROCESS TESTS (FAIL DURING INITIAL RUN OF UNIT TESTING)
 
-    def test_ChangePassword(self):
-        result = interface.changePassword('userLogin', 'newPassword')
-        self.assertEqual(True, result['success'], result['msg'])
+    # def test_ChangePassword(self):
+    #     result = interface.changePassword('userLogin', 'newPassword')
+    #     self.assertEqual(True, result['success'], result['msg'])
 
-    def test_ChangeAdminPermission(self):
-        result = interface.changeAdminPermission('userLogin', True)
-        self.assertEqual(True, result['success'], result['msg'])
+    # def test_ChangeAdminPermission(self):
+    #     result = interface.changeAdminPermission('userLogin', True)
+    #     self.assertEqual(True, result['success'], result['msg'])
     
-    def test_FindDashboard(self):
-        result = interface.findDashboard('dHEquNzGz')
-        self.assertEqual(True, result['success'], result['msg'])
+    # def test_FindDashboard(self):
+    #     result = interface.findDashboard('dHEquNzGz')
+    #     self.assertEqual(True, result['success'], result['msg'])
 
 if __name__ == "__main__":
     unittest.main()

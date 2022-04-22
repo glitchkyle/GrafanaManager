@@ -264,6 +264,52 @@ class GrafanaManager(object):
 
         return response
     
+    def getAllUsers(self):
+        response = {
+        "success": False,
+        "msg": None
+        }
+
+        session = requests.session()
+
+        if self.password is None:
+            response['msg'] = "No Grafana host admin password specified to object."
+            return response
+        
+        if self.username is None:
+            response['msg'] = "No Grafana host username specified to object."
+            return response
+        
+        if self.host is None:
+            response['msg'] = "No Grafana host specified to object."
+            return response
+        
+        # Login to Grafana
+        session.post(
+            'https://' + self.host + '/grafana/login', 
+            headers={'Content-Type': 'application/json'},
+            json={"password": self.password,"user": self.username}, 
+            verify=False
+        )
+        # Get Users
+        x = session.get(
+            'https://' + self.host + '/grafana/api/users', 
+            headers={'Content-Type': 'application/json', 'Accept': 'application/json'}, 
+            verify=False
+        )
+
+        if x.status_code == 200:
+            response['success'] = True
+            response['msg'] = "Successfully found Grafana user."
+            response['data'] = x
+        else:
+            response['msg'] = "Failed to find Grafana user."
+            response['data'] = x
+
+        session.close()
+
+        return response
+    
     def changePassword(self, credential, newPassword):
         """
         Change Grafana user password
@@ -471,7 +517,7 @@ class GrafanaManager(object):
  
     def createDashboard(self, fileDir):
         """
-        Generate new admin API token for object
+        Creates Grafana dashboard from given JSON file
 
         :param fileDir: Path to JSON containing Grafana dashboard
         :type fileDir: str
@@ -554,7 +600,6 @@ class GrafanaManager(object):
             response['data'] = x
         
         return response
-
 
     def findDashboard(self, dashboardUID):
         """
