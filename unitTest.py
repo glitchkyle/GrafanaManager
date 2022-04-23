@@ -27,10 +27,6 @@ class TestGrafanaMethods(unittest.TestCase):
         result = interface.storeUserInfo('testingUser', 'testingUserPassword')
         self.assertEqual(True, result['success'], result['msg'])
 
-    def test_GetUserInfo(self):
-        result = interface.getUserInfo('testingUser')
-        self.assertEqual(True, result['success'], result['msg'])
-
     def test_GetAllUserInfo(self):
         result = interface.getAllUserInfo()
         self.assertEqual(True, result['success'], result['msg'])
@@ -75,6 +71,10 @@ class TestGrafanaMethods(unittest.TestCase):
     
     # def test_FindDashboard(self):
     #     result = interface.findDashboard('dHEquNzGz')
+    #     self.assertEqual(True, result['success'], result['msg'])
+
+    # def test_GetUserInfo(self):
+    #     result = interface.getUserInfo('testingUser')
     #     self.assertEqual(True, result['success'], result['msg'])
 
 if __name__ == "__main__":
