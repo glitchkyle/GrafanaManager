@@ -20,7 +20,7 @@ class GrafanaManager(object):
     :param key: Grafana API token
     :type key: str
     """
-    def __init__(self, host=None, username=None, password=None, key=None):
+    def __init__(self, host=None, username=None, password=None, infoFilePath="userInfo.txt", infoFileDelimiter="=", key=None):
         """
         Constructor Method
         """
@@ -32,8 +32,8 @@ class GrafanaManager(object):
 
         # Constant attributes for user local database
 
-        self.infoFileName = "userInfo.txt"
-        self.infoFileDelimiter = "="
+        self.infoFilePath = infoFilePath
+        self.infoFileDelimiter = infoFileDelimiter
 
         # Create User Information file if it does not exist
         if not exists(self.infoFileName):
@@ -174,7 +174,7 @@ class GrafanaManager(object):
             "msg": None
         }
 
-        if not exists(self.infoFileName):
+        if not exists(self.infoFilePath):
             response['msg'] = "User Info File not found."
             return response
 
@@ -185,7 +185,7 @@ class GrafanaManager(object):
         if user['success']:
             previousLines = ""
 
-            with open(self.infoFileName,'r') as infoF:
+            with open(self.infoFilePath,'r') as infoF:
                 for line in infoF:
                     if len(line.strip()) > 0:
                         currentLine = line.split(self.infoFileDelimiter)
@@ -222,11 +222,11 @@ class GrafanaManager(object):
             "msg": None
         }
 
-        if not exists(self.infoFileName):
+        if not exists(self.infoFilePath):
             response['msg'] = "User Info File not found."
             return response
 
-        with open(self.infoFileName,'r') as infoF:
+        with open(self.infoFilePath,'r') as infoF:
             for line in infoF:
                 if len(line.strip()) > 0:
                     currentLine = line.split(self.infoFileDelimiter)
@@ -257,11 +257,11 @@ class GrafanaManager(object):
             "msg": None
         }
 
-        if not exists(self.infoFileName):
+        if not exists(self.infoFilePath):
             response['msg'] = "User Info File not found."
             return response
 
-        with open(self.infoFileName,'r') as infoF:
+        with open(self.infoFilePath,'r') as infoF:
             storedUsers = []
             for line in infoF:
                 if len(line.strip()) > 0:
