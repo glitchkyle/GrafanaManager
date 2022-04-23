@@ -29,6 +29,20 @@ class GrafanaManager(object):
 
         self.username = username
         self.password = password
+
+        # Constant attributes for user local database
+
+        self.infoFileName = "userInfo.txt"
+        self.infoFileDelimiter = "="
+
+        # Create User Information file if it does not exist
+        if not exists(self.infoFileName):
+            fout = open(self.infoFileName, 'w')
+            fout.close()
+
+        # Store admin username and password
+        if username is not None and password is not None:
+            self.storeUserInfo(username, password)
     
     def getHost(self):
         return self.host
@@ -58,6 +72,8 @@ class GrafanaManager(object):
         self.username = username
         self.password = password
 
+    # File Handling Methods
+
     def createConfigFile(self, fileName, delimiter):
         """
         Creates configuration file representation of Grafana Manager object. 
@@ -75,7 +91,7 @@ class GrafanaManager(object):
             "msg": None
         }
 
-        configFileHost, configFileUsername, configFilePassword, configFileKey = "", "", "", ""
+        configFileHost = configFileUsername = configFilePassword = configFileKey = ""
 
         if self.host is not None:
             configFileHost = self.host
@@ -142,6 +158,128 @@ class GrafanaManager(object):
 
         return response
     
+    def storeUserInfo(self, username, password):
+        """
+        Stores username and password to user information file. 
+
+        :param username: Account username to be stored
+        :type username: str
+        :param password: Account password to be stored
+        :type password: str
+        :return: Function Status
+        :rtype: JSON dictionary
+        """
+        response = {
+            "success": False,
+            "msg": None
+        }
+
+        if not exists(self.infoFileName):
+            response['msg'] = "User Info File not found."
+            return response
+
+        # Attempt to find user
+        user = self.getUserInfo(username)
+
+        # If user exist in info file
+        if user['success']:
+            previousLines = ""
+
+            with open(self.infoFileName,'r') as infoF:
+                for line in infoF:
+                    if len(line.strip()) > 0:
+                        currentLine = line.split(self.infoFileDelimiter)
+                        if currentLine[0] != username:
+                            previousLines += line.strip() + '\n'
+
+            previousLines += username + self.infoFileDelimiter + password + '\n'
+
+            with open(self.infoFileName, 'w') as infoF:
+                infoF.write(previousLines)
+
+            response['success'] = True
+            response['msg'] = "Replaced user info in info file."
+        # If user does not exist in info file
+        else:
+            with open(self.infoFileName,'a') as infoF:
+                infoF.write(username + self.infoFileDelimiter + password + '\n')
+                response['success'] = True
+                response['msg'] = "Added user info to info file."
+
+        return response
+
+    def getUserInfo(self, username):
+        """
+        Finds username and password from user information file given the username. 
+
+        :param username: Account username to be searched
+        :type username: str
+        :return: Function Status
+        :rtype: JSON dictionary
+        """
+        response = {
+            "success": False,
+            "msg": None
+        }
+
+        if not exists(self.infoFileName):
+            response['msg'] = "User Info File not found."
+            return response
+
+        with open(self.infoFileName,'r') as infoF:
+            for line in infoF:
+                if len(line.strip()) > 0:
+                    currentLine = line.split(self.infoFileDelimiter)
+                    if(currentLine[0] == username):
+                        response['success'] = True
+                        response['msg'] = "User found."
+                        user = {
+                            "username": str(currentLine[0]).strip(),
+                            "password": str(currentLine[1]).strip()
+                        }
+                        response['data'] = user
+
+                        return response
+            
+            response['msg'] = "User not found."
+
+        return response
+
+    def getAllUserInfo(self):
+        """
+        Obtains all usernames and passwords from user information file.
+
+        :return: Function Status
+        :rtype: JSON dictionary
+        """
+        response = {
+            "success": False,
+            "msg": None
+        }
+
+        if not exists(self.infoFileName):
+            response['msg'] = "User Info File not found."
+            return response
+
+        with open(self.infoFileName,'r') as infoF:
+            storedUsers = []
+            for line in infoF:
+                if len(line.strip()) > 0:
+                    currentLine = line.split(self.infoFileDelimiter)
+                    user = {
+                        "username": str(currentLine[0]).strip(),
+                        "password": str(currentLine[1]).strip()
+                    }
+                    storedUsers.append(user)
+
+            response['success'] = True
+            response['msg'] = "Users stored in data."
+            response['data'] = storedUsers
+
+        return response
+
+    # Admin Methods
+
     def createNewUser(self, newUserName, newUserEmail, newUserLogin, newUserPassword):
         """
         Creates new Grafana user, automatically assigning to default organization
@@ -158,8 +296,8 @@ class GrafanaManager(object):
         :rtype: JSON dictionary 
         """
         response = {
-        "success": False,
-        "msg": None
+            "success": False,
+            "msg": None
         }
 
         session = requests.session()
@@ -202,6 +340,8 @@ class GrafanaManager(object):
             response['success'] = True
             response['msg'] = "Successfully created new Grafana user."
             response['data'] = x
+
+            self.storeUserInfo(newUserLogin, newUserPassword)
         else:
             response['msg'] = "Failed to create new Grafana user."
             response['data'] = x
@@ -220,8 +360,8 @@ class GrafanaManager(object):
         :rtype: JSON dictionary 
         """
         response = {
-        "success": False,
-        "msg": None
+            "success": False,
+            "msg": None
         }
 
         session = requests.session()
@@ -266,8 +406,8 @@ class GrafanaManager(object):
     
     def getAllUsers(self):
         response = {
-        "success": False,
-        "msg": None
+            "success": False,
+            "msg": None
         }
 
         session = requests.session()
@@ -322,8 +462,8 @@ class GrafanaManager(object):
         :rtype: JSON dictionary 
         """
         response = {
-        "success": False,
-        "msg": None
+            "success": False,
+            "msg": None
         }
 
         session = requests.session()
@@ -374,6 +514,8 @@ class GrafanaManager(object):
             response['success'] = True
             response['msg'] = "Successfully changed password for Grafana user."
             response['data'] = x
+
+            self.storeUserInfo(credential, newPassword)
         else:
             response['msg'] = "Failed to change password for Grafana user."
             response['data'] = x
@@ -394,8 +536,8 @@ class GrafanaManager(object):
         :rtype: JSON dictionary 
         """
         response = {
-        "success": False,
-        "msg": None
+            "success": False,
+            "msg": None
         }
 
         session = requests.session()
@@ -464,8 +606,8 @@ class GrafanaManager(object):
         :rtype: JSON dictionary 
         """
         response = {
-        "success": False,
-        "msg": None
+            "success": False,
+            "msg": None
         }
 
         session = requests.session()
@@ -515,6 +657,8 @@ class GrafanaManager(object):
 
         return response
  
+    # Dashboard Methods
+
     def createDashboard(self, fileDir):
         """
         Creates Grafana dashboard from given JSON file
@@ -525,8 +669,8 @@ class GrafanaManager(object):
         :rtype: JSON dictionary 
         """
         response = {
-        "success": False,
-        "msg": None
+            "success": False,
+            "msg": None
         }
 
         if self.apiKey is None:
@@ -571,8 +715,8 @@ class GrafanaManager(object):
         :rtype: JSON dictionary 
         """
         response = {
-        "success": False,
-        "msg": None
+            "success": False,
+            "msg": None
         }
 
         if self.apiKey is None:
@@ -611,8 +755,8 @@ class GrafanaManager(object):
         :rtype: JSON dictionary 
         """
         response = {
-        "success": False,
-        "msg": None
+            "success": False,
+            "msg": None
         }
 
         if self.apiKey is None:
@@ -649,8 +793,8 @@ class GrafanaManager(object):
         :rtype: JSON dictionary 
         """
         response = {
-        "success": False,
-        "msg": None
+            "success": False,
+            "msg": None
         }
 
         if self.apiKey is None:
@@ -689,8 +833,8 @@ class GrafanaManager(object):
         :rtype: JSON dictionary 
         """
         response = {
-        "success": False,
-        "msg": None
+            "success": False,
+            "msg": None
         }
 
         if self.apiKey is None:

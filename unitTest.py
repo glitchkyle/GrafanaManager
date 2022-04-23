@@ -20,7 +20,19 @@ class TestGrafanaMethods(unittest.TestCase):
         self.assertEqual(True, result['success'], result['msg'])
 
     def test_CreateNewUser(self):
-        result = interface.createNewUser('user', 'user@user.com', 'userLogin', 'uesrPassword')
+        result = interface.createNewUser('user', 'user@user.com', 'userLogin', 'userPassword')
+        self.assertEqual(True, result['success'], result['msg'])
+    
+    def test_StoreUserInfo(self):
+        result = interface.storeUserInfo('testingUser', 'testingUserPassword')
+        self.assertEqual(True, result['success'], result['msg'])
+
+    def test_GetUserInfo(self):
+        result = interface.getUserInfo('testingUser')
+        self.assertEqual(True, result['success'], result['msg'])
+
+    def test_GetAllUserInfo(self):
+        result = interface.getAllUserInfo()
         self.assertEqual(True, result['success'], result['msg'])
 
     def test_FindUser(self):
