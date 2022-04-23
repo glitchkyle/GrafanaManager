@@ -24,7 +24,7 @@ class GrafanaManager(object):
     :param key: Grafana API token
     :type key: str
     """
-    def __init__(self, host=None, username=None, password=None, infoFilePath="userInfo.txt", infoFileDelimiter="=", key=None):
+    def __init__(self, host=None, username=None, password=None, infoFilePath=None, infoFileDelimiter=None, key=None):
         """
         Constructor Method
         """
@@ -40,7 +40,7 @@ class GrafanaManager(object):
         self.infoFileDelimiter = infoFileDelimiter
 
         # Create User Information file if it does not exist
-        if not exists(self.infoFileName):
+        if not exists(self.infoFileName) and infoFilePath is not None:
             fout = open(self.infoFileName, 'w')
             fout.close()
 
@@ -75,6 +75,11 @@ class GrafanaManager(object):
     def setUserLogin(self, username, password):
         self.username = username
         self.password = password
+
+    def setUserInfoFile(self, userInfoFilePath, userInfoFileDelimiter):
+        if exists(userInfoFilePath):
+            self.infoFilePath = userInfoFilePath
+            self.infoFileDelimiter = userInfoFileDelimiter
 
     # File Handling Methods
 
