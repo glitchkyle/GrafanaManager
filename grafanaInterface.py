@@ -352,6 +352,10 @@ class GrafanaManager(object):
             response['msg'] = "No Grafana host specified to object."
             return response
         
+        if self.infoFilePath is None:
+            response['msg'] = "No user information file path specified to object."
+            return response
+        
         # Login to Grafana
         session.post(
             'https://' + self.host + '/grafana/login', 
@@ -509,6 +513,10 @@ class GrafanaManager(object):
         
         if self.host is None:
             response['msg'] = "No Grafana host specified to object."
+            return response
+
+        if self.infoFilePath is None:
+            response['msg'] = "No user information file path specified to object."
             return response
         
         # Login to Grafana
