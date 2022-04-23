@@ -17,6 +17,10 @@ class GrafanaManager(object):
     :type username: str
     :param password: Grafana Admin Password
     :type password: str
+    :param infoFilePath: Path to User Information File
+    :type infoFilePath: str
+    :param infoFileDelimiter: User Information File Delimiter
+    :type infoFileDelimiter: str
     :param key: Grafana API token
     :type key: str
     """
