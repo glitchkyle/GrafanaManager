@@ -78,9 +78,30 @@ class GrafanaManager(object):
         self.password = password
 
     def setUserInfoFile(self, userInfoFilePath, userInfoFileDelimiter):
+        """
+        Assigns existing user information file path and delimiter to object.
+
+        :param userInfoFilePath: The user information file path
+        :type userInfoFilePath: str
+        :param userInfoFileDelimiter: The delimiter of the user information file
+        :type userInfoFileDelimiter: str
+        :return: Function Status
+        :rtype: JSON dictionary
+        """
+        response = {
+            'success': False,
+            'msg': None
+        }
+
         if exists(userInfoFilePath):
             self.infoFilePath = userInfoFilePath
             self.infoFileDelimiter = userInfoFileDelimiter
+            response['success'] = True
+            response['msg'] = "Successfully assigned path and delimiter."
+        else:
+            response['msg'] = "File path does not exist. Failed to assign path and delimiter."
+
+        return response
 
     # File Handling Methods
 
