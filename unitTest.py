@@ -7,8 +7,10 @@ requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 host = str(input())
 username = str(input())
 password = str(input())
+userInfoFilePath = str(input())
+userInfoFileDelimiter = str(input())
 
-interface = GrafanaManager(host, username, password)
+interface = GrafanaManager(host, username, password, userInfoFilePath, userInfoFileDelimiter)
 
 class TestGrafanaMethods(unittest.TestCase):
     def test_CreateConfigFile(self):

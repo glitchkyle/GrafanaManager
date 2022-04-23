@@ -40,12 +40,13 @@ class GrafanaManager(object):
         self.infoFileDelimiter = infoFileDelimiter
 
         # Create User Information file if it does not exist
-        if not exists(self.infoFileName) and infoFilePath is not None:
-            fout = open(self.infoFileName, 'w')
-            fout.close()
+        if infoFilePath is not None:
+            if not exists(infoFilePath):
+                fout = open(self.infoFilePath, 'w')
+                fout.close()
 
         # Store admin username and password
-        if username is not None and password is not None:
+        if username is not None and password is not None and infoFilePath is not None:
             self.storeUserInfo(username, password)
     
     def getHost(self):
@@ -203,14 +204,14 @@ class GrafanaManager(object):
 
             previousLines += username + self.infoFileDelimiter + password + '\n'
 
-            with open(self.infoFileName, 'w') as infoF:
+            with open(self.infoFilePath, 'w') as infoF:
                 infoF.write(previousLines)
 
             response['success'] = True
             response['msg'] = "Replaced user info in info file."
         # If user does not exist in info file
         else:
-            with open(self.infoFileName,'a') as infoF:
+            with open(self.infoFilePath,'a') as infoF:
                 infoF.write(username + self.infoFileDelimiter + password + '\n')
                 response['success'] = True
                 response['msg'] = "Added user info to info file."
