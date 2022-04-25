@@ -1,4 +1,5 @@
 {
+    "dashboard": {
     "annotations": {
       "list": [
         {
@@ -16,7 +17,7 @@
     "editable": true,
     "gnetId": 1860,
     "graphTooltip": 0,
-    "id": 6,
+    "id": null,
     "iteration": 1644640286204,
     "links": [
       {
@@ -14182,4 +14183,5 @@
     "title": "Node Exporter Full",
     "uid": "rYdddlPWk",
     "version": 2
+  }
 }
